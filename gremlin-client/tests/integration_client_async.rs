@@ -1,273 +1,157 @@
 mod common;
 
-#[cfg(feature = "async_gremlin")]
-#[allow(unused_imports)]
-mod aio {
+use common::io::*;
+use common::REMOTE_HOST;
+use gremlin_client::prelude::*;
 
-    use gremlin_client::{aio::GremlinClient, ConnectionOptions, GremlinError, TlsOptions};
-    use gremlin_client::{Edge, GValue, Map, Vertex};
+#[tokio::test]
+async fn test_client_connection_ok() {
+    connect().await.expect("Cannot connect");
+}
 
-    use super::common::aio::{connect, create_edge, create_vertex, drop_vertices};
-    #[cfg(feature = "async-std-runtime")]
-    use async_std::prelude::*;
+#[tokio::test]
+async fn test_ok_credentials() {
+    let client = GremlinClient::connect(
+        ConnectionOptions::builder()
+            .host(REMOTE_HOST)
+            .port(8183)
+            .credentials("stephen", "password")
+            .ssl(true)
+            .tls_options(TlsOptions::default())
+            .build(),
+    )
+    .await
+    .expect("Cannot connect");
 
-    #[cfg(feature = "tokio-runtime")]
-    use tokio_stream::StreamExt;
+    let result = client.execute("g.V().limit(1)", &[]).await;
+    assert!(result.is_ok(), "{:?}", result);
+}
 
-    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
-    #[cfg_attr(feature = "tokio-runtime", tokio::test)]
-    async fn test_client_connection_ok() {
-        connect().await;
+#[tokio::test]
+async fn test_wrong_query() {
+    let error = connect()
+        .await
+        .expect("it should connect")
+        .execute("g.V", &[])
+        .await
+        .expect_err("it should return an error");
+
+    match error {
+        GremlinError::Request((code, message)) => {
+            assert_eq!(597, code);
+            assert_eq!("No such property: V for class: org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource",message)
+        }
+        _ => panic!("wrong error type"),
     }
+}
 
-    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
-    #[cfg_attr(feature = "tokio-runtime", tokio::test)]
-    async fn test_ok_credentials() {
-        let client = GremlinClient::connect(
-            ConnectionOptions::builder()
-                .host("localhost")
-                .port(8183)
-                .credentials("stephen", "password")
-                .ssl(true)
-                .tls_options(TlsOptions {
-                    accept_invalid_certs: true,
-                })
-                .build(),
+#[tokio::test]
+async fn test_wrong_alias() {
+    let error = connect()
+        .await
+        .expect("it should connect")
+        .alias("foo")
+        .execute("g.V()", &[])
+        .await
+        .expect_err("it should return an error");
+
+    match error {
+        GremlinError::Request((code, message)) => {
+            assert_eq!(499, code);
+            assert_eq!("Could not alias [g] to [foo] as [foo] not in the Graph or TraversalSource global bindings",message)
+        }
+        _ => panic!("wrong error type"),
+    }
+}
+
+#[tokio::test]
+async fn test_vertex_query() {
+    let graph = connect().await.expect("it should connect");
+    let vertices = graph
+        .execute(
+            "g.V().hasLabel('person').has('name',name)",
+            &[("name", &"marko")],
         )
         .await
-        .expect("Cannot connect");
+        .expect("it should execute a query")
+        .filter_map(Result::ok)
+        .map(|f| f.take::<Vertex>())
+        .collect::<Result<Vec<Vertex>, _>>()
+        .await
+        .expect("It should be ok");
 
-        let result = client.execute("g.V().limit(1)", &[]).await;
-        assert!(result.is_ok(), "{:?}", result);
-    }
+    assert_eq!("person", vertices[0].label());
+}
+#[tokio::test]
+async fn test_edge_query() {
+    let graph = connect().await.expect("it should connect");
+    let edges = graph
+        .execute("g.E().hasLabel('knows').limit(1)", &[])
+        .await
+        .expect("it should execute a query")
+        .filter_map(Result::ok)
+        .map(|f| f.take::<Edge>())
+        .collect::<Result<Vec<Edge>, _>>()
+        .await
+        .expect("It should be ok");
 
-    #[cfg(feature = "async-std-runtime")]
-    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
-    async fn test_empty_query() {
-        let graph = connect().await;
+    assert_eq!("knows", edges[0].label());
+}
 
-        assert_eq!(
-            0,
-            graph
-                .execute("g.V().hasLabel('NotFound')", &[])
-                .await
-                .expect("It should execute a traversal")
-                .count()
-                .await
-        )
-    }
+#[tokio::test]
+async fn test_vertex_creation() {
+    let graph = connect().await.expect("it should connect");
+    let mark = create_vertex(&graph, "mark").await;
 
-    #[cfg(feature = "async-std-runtime")]
-    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
-    async fn test_session_empty_query() {
-        let mut graph = connect().await;
-        let mut sessioned_graph = graph
-            .create_session("test-session".to_string())
-            .await
-            .expect("It should create a session");
+    assert_eq!("person", mark.label());
 
-        assert_eq!(
-            0,
-            sessioned_graph
-                .execute("g.V().hasLabel('NotFound')", &[])
-                .await
-                .expect("It should execute a traversal")
-                .count()
-                .await
-        );
+    let value_map = graph
+        .execute("g.V(identity).valueMap()", &[("identity", mark.id())])
+        .await
+        .expect("should fetch valueMap with properties")
+        .filter_map(Result::ok)
+        .map(|f| f.take::<Map>())
+        .collect::<Result<Vec<Map>, _>>()
+        .await
+        .expect("It should be ok");
 
-        sessioned_graph
-            .close_session()
-            .await
-            .expect("It should close the session.");
-    }
+    assert_eq!(1, value_map.len());
 
-    #[cfg(feature = "async-std-runtime")]
-    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
-    async fn test_keep_alive_query() {
-        let graph = connect().await;
+    assert_eq!(
+        Some(&GValue::List(vec![String::from("mark").into()].into())),
+        value_map[0].get("name")
+    );
+}
 
-        assert_eq!(
-            0,
-            graph
-                .execute("g.V().hasLabel('NotFound')", &[])
-                .await
-                .expect("It should execute a traversal")
-                .count()
-                .await
-        );
+#[tokio::test]
+async fn test_edge_creation() {
+    let graph = connect().await.expect("it should connect");
+    let mark = create_vertex(&graph, "mark").await;
+    let frank = create_vertex(&graph, "frank").await;
 
-        async_std::task::sleep(std::time::Duration::from_millis(2500)).await;
+    let edge = create_edge(&graph, &mark, &frank, "knows").await;
 
-        assert_eq!(
-            0,
-            graph
-                .execute("g.V().hasLabel('NotFound')", &[])
-                .await
-                .expect("It should execute a traversal")
-                .count()
-                .await
-        )
-    }
+    assert_eq!("knows", edge.label());
 
-    #[cfg(feature = "async-std-runtime")]
-    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
-    async fn test_partial_content() {
-        let graph = connect().await;
+    assert_eq!(&mark, edge.out_v());
+    assert_eq!(&frank, edge.in_v());
 
-        drop_vertices(&graph, "Partial")
-            .await
-            .expect("Failed to drop vertices");
+    let edges = graph
+        .execute("g.V(identity).outE()", &[("identity", mark.id())])
+        .await
+        .expect("should fetch edge")
+        .filter_map(Result::ok)
+        .map(|f| f.take::<Edge>())
+        .collect::<Result<Vec<Edge>, _>>()
+        .await
+        .expect("It should be ok");
 
-        for i in 0..1000 {
-            graph
-                .execute("g.addV('Partial').property('id',_id)", &[("_id", &i)])
-                .await
-                .expect("It should execute a traversal");
-        }
+    assert_eq!(1, edges.len());
 
-        assert_eq!(
-            1000,
-            graph
-                .execute("g.V().hasLabel('Partial')", &[])
-                .await
-                .expect("It should execute a traversal")
-                .count()
-                .await
-        );
-    }
+    let edge = &edges[0];
 
-    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
-    #[cfg_attr(feature = "tokio-runtime", tokio::test)]
-    async fn test_wrong_query() {
-        let error = connect()
-            .await
-            .execute("g.V", &[])
-            .await
-            .expect_err("it should return an error");
+    assert_eq!("knows", edge.label());
 
-        match error {
-            GremlinError::Request((code, message)) => {
-                assert_eq!(597, code);
-                assert_eq!("No such property: V for class: org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource",message)
-            }
-            _ => panic!("wrong error type"),
-        }
-    }
-
-    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
-    #[cfg_attr(feature = "tokio-runtime", tokio::test)]
-    async fn test_wrong_alias() {
-        let error = connect()
-            .await
-            .alias("foo")
-            .execute("g.V()", &[])
-            .await
-            .expect_err("it should return an error");
-
-        match error {
-            GremlinError::Request((code, message)) => {
-                assert_eq!(499, code);
-                assert_eq!("Could not alias [g] to [foo] as [foo] not in the Graph or TraversalSource global bindings",message)
-            }
-            _ => panic!("wrong error type"),
-        }
-    }
-
-    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
-    #[cfg_attr(feature = "tokio-runtime", tokio::test)]
-
-    async fn test_vertex_query() {
-        let graph = connect().await;
-        let vertices = graph
-            .execute(
-                "g.V().hasLabel('person').has('name',name)",
-                &[("name", &"marko")],
-            )
-            .await
-            .expect("it should execute a query")
-            .filter_map(Result::ok)
-            .map(|f| f.take::<Vertex>())
-            .collect::<Result<Vec<Vertex>, _>>()
-            .await
-            .expect("It should be ok");
-
-        assert_eq!("person", vertices[0].label());
-    }
-    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
-    #[cfg_attr(feature = "tokio-runtime", tokio::test)]
-    async fn test_edge_query() {
-        let graph = connect().await;
-        let edges = graph
-            .execute("g.E().hasLabel('knows').limit(1)", &[])
-            .await
-            .expect("it should execute a query")
-            .filter_map(Result::ok)
-            .map(|f| f.take::<Edge>())
-            .collect::<Result<Vec<Edge>, _>>()
-            .await
-            .expect("It should be ok");
-
-        assert_eq!("knows", edges[0].label());
-    }
-
-    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
-    #[cfg_attr(feature = "tokio-runtime", tokio::test)]
-    async fn test_vertex_creation() {
-        let graph = connect().await;
-        let mark = create_vertex(&graph, "mark").await;
-
-        assert_eq!("person", mark.label());
-
-        let value_map = graph
-            .execute("g.V(identity).valueMap()", &[("identity", mark.id())])
-            .await
-            .expect("should fetch valueMap with properties")
-            .filter_map(Result::ok)
-            .map(|f| f.take::<Map>())
-            .collect::<Result<Vec<Map>, _>>()
-            .await
-            .expect("It should be ok");
-
-        assert_eq!(1, value_map.len());
-
-        assert_eq!(
-            Some(&GValue::List(vec![String::from("mark").into()].into())),
-            value_map[0].get("name")
-        );
-    }
-
-    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
-    #[cfg_attr(feature = "tokio-runtime", tokio::test)]
-    async fn test_edge_creation() {
-        let graph = connect().await;
-        let mark = create_vertex(&graph, "mark").await;
-        let frank = create_vertex(&graph, "frank").await;
-
-        let edge = create_edge(&graph, &mark, &frank, "knows").await;
-
-        assert_eq!("knows", edge.label());
-
-        assert_eq!(&mark, edge.out_v());
-        assert_eq!(&frank, edge.in_v());
-
-        let edges = graph
-            .execute("g.V(identity).outE()", &[("identity", mark.id())])
-            .await
-            .expect("should fetch edge")
-            .filter_map(Result::ok)
-            .map(|f| f.take::<Edge>())
-            .collect::<Result<Vec<Edge>, _>>()
-            .await
-            .expect("It should be ok");
-
-        assert_eq!(1, edges.len());
-
-        let edge = &edges[0];
-
-        assert_eq!("knows", edge.label());
-
-        assert_eq!(&mark, edge.out_v());
-        assert_eq!(&frank, edge.in_v());
-    }
+    assert_eq!(&mark, edge.out_v());
+    assert_eq!(&frank, edge.in_v());
 }

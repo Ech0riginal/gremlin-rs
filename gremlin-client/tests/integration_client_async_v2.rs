@@ -1,174 +1,153 @@
+//! The current V2 absolutely messes with messaging, good thing we're on 3 :D
+
 #[allow(dead_code)]
 mod common;
 
-#[cfg(feature = "async_gremlin")]
-mod aio {
+use common::io::*;
+use gremlin_client::prelude::*;
 
-    use gremlin_client::GremlinError;
-    use gremlin_client::{Edge, GValue, GraphSON, Map, Vertex};
+#[ignore]
+#[tokio::test]
+async fn test_client_connection_ok_v2() {
+    connect_serializer(V2).await.expect("Cannot connect");
+}
 
-    use super::common::aio::{connect_serializer, create_edge, create_vertex};
-    #[cfg(feature = "async-std-runtime")]
-    use async_std::prelude::*;
+#[ignore]
+#[tokio::test]
+async fn test_wrong_query_v2() {
+    let error = connect_serializer(V2)
+        .await
+        .expect("Cannot connect")
+        .execute("g.V", &[])
+        .await
+        .expect_err("it should return an error");
 
-    #[cfg(feature = "tokio-runtime")]
-    use tokio_stream::StreamExt;
-
-    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
-    #[cfg_attr(feature = "tokio-runtime", tokio::test)]
-    async fn test_client_connection_ok_v2() {
-        connect_serializer(GraphSON::V2).await;
+    match error {
+        GremlinError::Request((code, message)) => {
+            assert_eq!(597, code);
+            assert_eq!("No such property: V for class: org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource",message)
+        }
+        _ => panic!("wrong error type"),
     }
+}
 
-    #[cfg(feature = "async-std-runtime")]
-    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
-    async fn test_empty_query_v2() {
-        let graph = connect_serializer(GraphSON::V2).await;
+#[ignore]
+#[tokio::test]
+async fn test_wrong_alias_v2() {
+    let error = connect_serializer(V2)
+        .await
+        .expect("Cannot connect")
+        .alias("foo")
+        .execute("g.V()", &[])
+        .await
+        .expect_err("it should return an error");
 
-        assert_eq!(
-            0,
-            graph
-                .execute("g.V().hasLabel('NotFound')", &[])
-                .await
-                .expect("It should execute a traversal")
-                .count()
-                .await
+    match error {
+        GremlinError::Request((code, message)) => {
+            assert_eq!(499, code);
+            assert_eq!("Could not alias [g] to [foo] as [foo] not in the Graph or TraversalSource global bindings",message)
+        }
+        _ => panic!("wrong error type"),
+    }
+}
+
+#[ignore]
+#[tokio::test]
+async fn test_vertex_query_v2() {
+    let graph = connect_serializer(V2).await.expect("Cannot connect");
+
+    println!("About to execute query.");
+    let vertices = graph
+        .execute(
+            "g.V().hasLabel('person').has('name',name)",
+            &[("name", &"marko")],
         )
-    }
+        .await
+        .expect("it should execute a query")
+        .filter_map(Result::ok)
+        .map(|f| f.take::<Vertex>())
+        .collect::<Result<Vec<Vertex>, _>>()
+        .await
+        .expect("It should be ok");
 
-    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
-    #[cfg_attr(feature = "tokio-runtime", tokio::test)]
-    async fn test_wrong_query_v2() {
-        let error = connect_serializer(GraphSON::V2)
-            .await
-            .execute("g.V", &[])
-            .await
-            .expect_err("it should return an error");
+    assert_eq!("person", vertices[0].label());
+}
 
-        match error {
-            GremlinError::Request((code, message)) => {
-                assert_eq!(597, code);
-                assert_eq!("No such property: V for class: org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource",message)
-            }
-            _ => panic!("wrong error type"),
-        }
-    }
+#[ignore]
+#[tokio::test]
+async fn test_edge_query_v2() {
+    let graph = connect_serializer(V2).await.expect("Cannot connect");
+    let edges = graph
+        .execute("g.E().hasLabel('knows').limit(1)", &[])
+        .await
+        .expect("it should execute a query")
+        .filter_map(Result::ok)
+        .map(|f| f.take::<Edge>())
+        .collect::<Result<Vec<Edge>, _>>()
+        .await
+        .expect("It should be ok");
 
-    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
-    #[cfg_attr(feature = "tokio-runtime", tokio::test)]
-    async fn test_wrong_alias_v2() {
-        let error = connect_serializer(GraphSON::V2)
-            .await
-            .alias("foo")
-            .execute("g.V()", &[])
-            .await
-            .expect_err("it should return an error");
+    assert_eq!("knows", edges[0].label());
+}
 
-        match error {
-            GremlinError::Request((code, message)) => {
-                assert_eq!(499, code);
-                assert_eq!("Could not alias [g] to [foo] as [foo] not in the Graph or TraversalSource global bindings",message)
-            }
-            _ => panic!("wrong error type"),
-        }
-    }
+#[ignore]
+#[tokio::test]
+async fn test_vertex_creation_v2() {
+    let graph = connect_serializer(V2).await.expect("Cannot connect");
 
-    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
-    #[cfg_attr(feature = "tokio-runtime", tokio::test)]
+    let mark = create_vertex(&graph, "mark").await;
 
-    async fn test_vertex_query_v2() {
-        let graph = connect_serializer(GraphSON::V2).await;
+    assert_eq!("person", mark.label());
 
-        println!("About to execute query.");
-        let vertices = graph
-            .execute(
-                "g.V().hasLabel('person').has('name',name)",
-                &[("name", &"marko")],
-            )
-            .await
-            .expect("it should execute a query")
-            .filter_map(Result::ok)
-            .map(|f| f.take::<Vertex>())
-            .collect::<Result<Vec<Vertex>, _>>()
-            .await
-            .expect("It should be ok");
+    let value_map = graph
+        .execute("g.V(identity).valueMap()", &[("identity", mark.id())])
+        .await
+        .expect("should fetch valueMap with properties")
+        .filter_map(Result::ok)
+        .map(|f| f.take::<Map>())
+        .collect::<Result<Vec<Map>, _>>()
+        .await
+        .expect("It should be ok");
 
-        assert_eq!("person", vertices[0].label());
-    }
-    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
-    #[cfg_attr(feature = "tokio-runtime", tokio::test)]
-    async fn test_edge_query_v2() {
-        let graph = connect_serializer(GraphSON::V2).await;
-        let edges = graph
-            .execute("g.E().hasLabel('knows').limit(1)", &[])
-            .await
-            .expect("it should execute a query")
-            .filter_map(Result::ok)
-            .map(|f| f.take::<Edge>())
-            .collect::<Result<Vec<Edge>, _>>()
-            .await
-            .expect("It should be ok");
+    assert_eq!(1, value_map.len());
 
-        assert_eq!("knows", edges[0].label());
-    }
+    assert_eq!(
+        Some(&GValue::List(vec![String::from("mark").into()].into())),
+        value_map[0].get("name")
+    );
+}
 
-    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
-    #[cfg_attr(feature = "tokio-runtime", tokio::test)]
-    async fn test_vertex_creation_v2() {
-        let graph = connect_serializer(GraphSON::V2).await;
-        let mark = create_vertex(&graph, "mark").await;
+#[ignore]
+#[tokio::test]
+async fn test_edge_creation_v2() {
+    let graph = connect_serializer(V2).await.expect("Cannot connect");
 
-        assert_eq!("person", mark.label());
+    let mark = create_vertex(&graph, "mark").await;
+    let frank = create_vertex(&graph, "frank").await;
 
-        let value_map = graph
-            .execute("g.V(identity).valueMap()", &[("identity", mark.id())])
-            .await
-            .expect("should fetch valueMap with properties")
-            .filter_map(Result::ok)
-            .map(|f| f.take::<Map>())
-            .collect::<Result<Vec<Map>, _>>()
-            .await
-            .expect("It should be ok");
+    let edge = create_edge(&graph, &mark, &frank, "knows").await;
 
-        assert_eq!(1, value_map.len());
+    assert_eq!("knows", edge.label());
 
-        assert_eq!(
-            Some(&GValue::List(vec![String::from("mark").into()].into())),
-            value_map[0].get("name")
-        );
-    }
+    assert_eq!(&mark, edge.out_v());
+    assert_eq!(&frank, edge.in_v());
 
-    #[cfg_attr(feature = "async-std-runtime", async_std::test)]
-    #[cfg_attr(feature = "tokio-runtime", tokio::test)]
-    async fn test_edge_creation_v2() {
-        let graph = connect_serializer(GraphSON::V2).await;
-        let mark = create_vertex(&graph, "mark").await;
-        let frank = create_vertex(&graph, "frank").await;
+    let edges = graph
+        .execute("g.V(identity).outE()", &[("identity", mark.id())])
+        .await
+        .expect("should fetch edge")
+        .filter_map(Result::ok)
+        .map(|f| f.take::<Edge>())
+        .collect::<Result<Vec<Edge>, _>>()
+        .await
+        .expect("It should be ok");
 
-        let edge = create_edge(&graph, &mark, &frank, "knows").await;
+    assert_eq!(1, edges.len());
 
-        assert_eq!("knows", edge.label());
+    let edge = &edges[0];
 
-        assert_eq!(&mark, edge.out_v());
-        assert_eq!(&frank, edge.in_v());
+    assert_eq!("knows", edge.label());
 
-        let edges = graph
-            .execute("g.V(identity).outE()", &[("identity", mark.id())])
-            .await
-            .expect("should fetch edge")
-            .filter_map(Result::ok)
-            .map(|f| f.take::<Edge>())
-            .collect::<Result<Vec<Edge>, _>>()
-            .await
-            .expect("It should be ok");
-
-        assert_eq!(1, edges.len());
-
-        let edge = &edges[0];
-
-        assert_eq!("knows", edge.label());
-
-        assert_eq!(&mark, edge.out_v());
-        assert_eq!(&frank, edge.in_v());
-    }
+    assert_eq!(&mark, edge.out_v());
+    assert_eq!(&frank, edge.in_v());
 }

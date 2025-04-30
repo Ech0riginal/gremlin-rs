@@ -1,22 +1,22 @@
 use std::collections::HashMap;
 
-use common::io::{drop_vertices, expect_janusgraph_client};
-use gremlin_client::{
-    process::traversal::{traversal, __},
-    structure::T,
-    GKey, GValue,
-};
-
 mod common;
+
+use common::io::*;
+use gremlin_client::prelude::*;
 
 //Custom vertex ids are a feature offered by JanusGraph
 //https://docs.janusgraph.org/advanced-topics/custom-vertex-id/
 
-#[test]
-fn test_merge_v_custom_id() {
-    let client = expect_janusgraph_client();
+#[tokio::test]
+async fn test_merge_v_custom_id() {
+    let client = graph().await;
     let expected_label = "test_merge_v_custom_id";
-    drop_vertices(&client, expected_label).expect("Failed to drop vertices");
+
+    drop_vertices(&client, expected_label)
+        .await
+        .expect("Failed to drop vertices");
+
     let g = traversal().with_remote(client);
     let expected_id = "test_merge_v_custom_id";
     let mut start_step_map: HashMap<GKey, GValue> = HashMap::new();
@@ -25,10 +25,11 @@ fn test_merge_v_custom_id() {
     let actual_vertex = g
         .merge_v(start_step_map)
         .next()
+        .await
         .expect("Should get a response")
         .expect("Should return a vertex");
     match actual_vertex.id() {
-        gremlin_client::GID::String(actual) => assert_eq!(expected_id, actual),
+        GID::String(actual) => assert_eq!(expected_id, actual),
         other => panic!("Didn't get expected id type {:?}", other),
     }
 
@@ -59,11 +60,12 @@ fn test_merge_v_custom_id() {
                 .select("propertyKey"),
         )
         .next()
+        .await
         .expect("Should get response")
         .expect("Should have returned a vertex");
 
     match actual_vertex.id() {
-        gremlin_client::GID::String(actual) => assert_eq!(expected_id, actual),
+        GID::String(actual) => assert_eq!(expected_id, actual),
         other => panic!("Didn't get expected id type {:?}", other),
     }
 
@@ -75,21 +77,26 @@ fn test_merge_v_custom_id() {
     assert_eq!(expected_property, actual_property);
 }
 
-#[test]
-fn test_add_v_custom_id() {
-    let client = expect_janusgraph_client();
+#[tokio::test]
+async fn test_add_v_custom_id() {
+    let client = graph().await;
     let expected_id = "test_add_v_custom_id";
     let test_vertex_label = "test_add_v_custom_id";
-    drop_vertices(&client, test_vertex_label).expect("Failed to drop vertices");
+
+    drop_vertices(&client, test_vertex_label)
+        .await
+        .expect("Failed to drop vertices");
+
     let g = traversal().with_remote(client);
     let actual_vertex = g
         .add_v(test_vertex_label)
         .property(T::Id, expected_id)
         .next()
+        .await
         .expect("Should get a response")
         .expect("Should return a vertex");
     match actual_vertex.id() {
-        gremlin_client::GID::String(actual) => assert_eq!(expected_id, actual),
+        GID::String(actual) => assert_eq!(expected_id, actual),
         other => panic!("Didn't get expected id type {:?}", other),
     }
 }
