@@ -8,5 +8,4 @@ mod serde;
 pub use serde::{ContentType, GraphSON, GraphSONDeserializer, GraphSONSerializer, MessageHandler};
 
 #[allow(unused)]
-pub use serde::{V2, V3, V3g};
-
+pub use serde::{V3g, V2, V3};

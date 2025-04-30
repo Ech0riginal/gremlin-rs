@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use crate::prelude::{GKey, GValue, Map};
+use std::collections::HashMap;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Bulk {

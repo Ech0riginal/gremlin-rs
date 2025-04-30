@@ -91,7 +91,7 @@ impl std::fmt::Debug for GValue {
             GValue::Set(_) => write!(f, "Set"),
             GValue::Map(map) => {
                 write!(f, "{:?}", map)
-            },
+            }
             GValue::Token(t) => write!(f, "{}", t.value()),
             GValue::String(string) => write!(f, "\"{}\"", string),
             GValue::Path(_) => write!(f, "Path"),
@@ -130,23 +130,17 @@ impl std::fmt::Debug for Bytecode {
     }
 }
 
-
 impl std::fmt::Debug for crate::process::traversal::bytecode::Instruction {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-
         if !self.args.is_empty() {
             match &self.args[0] {
-                GValue::P(_) => {
-                    write!(f, "P{:?}", &self.args[0])?
-                },
-                GValue::T(_) => {
-                    write!(f, "T{:?}", &self.args[0])?
-                },
+                GValue::P(_) => write!(f, "P{:?}", &self.args[0])?,
+                GValue::T(_) => write!(f, "T{:?}", &self.args[0])?,
                 _ => {
                     write!(f, "{}", &self.operator)?;
                     write!(f, "(")?;
                     write!(f, "{:?}", &self.args[0])?
-                },
+                }
             }
 
             for arg in self.args.iter().skip(1) {
@@ -159,7 +153,7 @@ impl std::fmt::Debug for crate::process::traversal::bytecode::Instruction {
                 GValue::P(_) | GValue::T(_) => Ok(()),
                 _ => {
                     write!(f, ")")
-                },
+                }
             }
         } else {
             Ok(())

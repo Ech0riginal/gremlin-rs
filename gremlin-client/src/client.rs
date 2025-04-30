@@ -147,7 +147,6 @@ impl<SD: GraphSON> GremlinClient<SD> {
         let id = msg.id().clone();
         let message = self.build_message(msg).unwrap();
 
-
         async move {
             let span = tracing::span!(tracing::Level::DEBUG, "gremlin");
             let _enter = span.enter();

@@ -1,3 +1,4 @@
+use super::{Direction, T};
 use crate::error::GremlinError;
 use crate::prelude::{GremlinResult, Token};
 use crate::structure::{Edge, GValue, Vertex};
@@ -5,7 +6,6 @@ use std::collections::hash_map::IntoIter;
 use std::collections::{BTreeMap, HashMap};
 use std::convert::{TryFrom, TryInto};
 use std::fmt::Formatter;
-use super::{Direction, T};
 
 /// Represent a Map<[GKey](struct.GKey),[GValue](struct.GValue)> which has ability to allow for non-String keys.
 /// TinkerPop type [here](http://tinkerpop.apache.org/docs/current/dev/io/#_map)

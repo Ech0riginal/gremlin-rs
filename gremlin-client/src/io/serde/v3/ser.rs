@@ -44,8 +44,6 @@ pub(crate) fn property<S: GraphSONSerializer>(value: &GValue) -> GremlinResult<V
     }))
 }
 
-
-
 // pub(crate) fn options<S: GraphSONSerializer>(value: &GValue) -> GremlinResult<Value> {
 //
 // }

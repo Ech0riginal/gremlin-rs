@@ -123,7 +123,6 @@ impl Conn {
         id: Uuid,
         payload: Vec<u8>,
     ) -> GremlinResult<(Response, Receiver<GremlinResult<Response>>)> {
-
         let (sender, mut receiver) = channel(1);
 
         self.sender
@@ -238,7 +237,10 @@ fn receiver_loop(
                     Message::Binary(data) => {
                         let response: Response = serde_json::from_slice(&data).unwrap();
 
-                        tracing::trace!(request=&response.request_id.to_string(), status=&response.status.code);
+                        tracing::trace!(
+                            request = &response.request_id.to_string(),
+                            status = &response.status.code
+                        );
 
                         let mut guard = requests.lock().await;
                         if response.status.code != 206 {

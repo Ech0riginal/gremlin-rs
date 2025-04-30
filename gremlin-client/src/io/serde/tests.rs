@@ -30,14 +30,22 @@ mod cases {
         pub fn deserialize<DS: GraphSON>(&self) {
             let result = DS::deserialize(&self.serial);
             assert!(result.is_ok(), "Deserialization failed");
-            assert_eq!(self.object, result.unwrap(), "Deserialization doesn't match expectation");
+            assert_eq!(
+                self.object,
+                result.unwrap(),
+                "Deserialization doesn't match expectation"
+            );
         }
 
         /// I had a stroke typing this but its great so it stays
         pub fn serialialize<DS: GraphSON>(&self) {
             let result = DS::serialize(&self.object);
             assert!(result.is_ok(), "Serialization failed");
-            assert_eq!(self.serial, result.unwrap(), "Serialization doesn't match expectation");
+            assert_eq!(
+                self.serial,
+                result.unwrap(),
+                "Serialization doesn't match expectation"
+            );
         }
     }
 

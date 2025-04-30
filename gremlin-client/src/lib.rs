@@ -141,7 +141,7 @@ pub mod prelude {
     pub type GremlinResult<T> = Result<T, GremlinError>;
 
     pub use crate::client::GremlinClient;
-    pub use crate::io::{GraphSON, V2, V3, V3g};
+    pub use crate::io::{GraphSON, V3g, V2, V3};
     pub use crate::options::*;
     pub use crate::{edge, vertex};
 
@@ -152,8 +152,8 @@ pub mod prelude {
     pub use crate::process::traversal::__;
 
     pub use crate::conversion::{BorrowFromGValue, FromGValue, ToGValue};
-    pub use crate::structure::*;
     pub(crate) use crate::message::Message;
+    pub use crate::structure::*;
 }
 
 #[cfg(feature = "derive")]

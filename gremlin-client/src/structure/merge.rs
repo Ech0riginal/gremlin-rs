@@ -1,6 +1,6 @@
-use std::collections::HashMap;
 use crate::process::traversal::step::OptionStep;
 use crate::structure::{GKey, GValue};
+use std::collections::HashMap;
 
 #[derive(Clone)]
 pub struct MergeBuilder {
@@ -67,7 +67,8 @@ impl MergeBuilder {
         K: Into<GKey>,
         V: Into<GValue>,
     {
-        self.map.extend(iter.into_iter().map(|(k, v)| (k.into(), v.into())));
+        self.map
+            .extend(iter.into_iter().map(|(k, v)| (k.into(), v.into())));
         self
     }
 }
@@ -101,36 +102,6 @@ impl<V: Into<GValue>> Insert<Option<V>> for OptionHandler {
         merge
     }
 }
-
-
-
-/*
-    pub fn insert<K, V>(mut self, key: K, value: V) -> Self
-    where
-        K: Into<GKey>,
-        V: Into<GValue>,
-    {
-        self.inner.insert(key.into(), value.into());
-        self
-    }
-
-    pub fn insert_opt<K, V>(mut self, key: K, optional_value: Option<V>) -> Self
-    where
-        K: Into<GKey>,
-        V: Into<GValue>,
-    {
-        if let Some(value) = optional_value {
-            self.inner.insert(key.into(), value.into());
-        }
-
-        self
-    }
-
-    pub fn extend(mut self, iter: impl IntoIterator<Item = (GKey, GValue)>) -> Self {
-        self.inner.extend(iter);
-        self
-    }
- */
 
 impl Into<OptionStep> for MergeBuilder {
     fn into(self) -> OptionStep {
