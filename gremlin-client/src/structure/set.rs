@@ -4,7 +4,7 @@ use std::vec::IntoIter;
 // pub type Set = Vec<GValue>;
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct Set(Vec<GValue>);
+pub struct Set(pub(crate) Vec<GValue>);
 
 impl Set {
     pub(crate) fn take(self) -> Vec<GValue> {

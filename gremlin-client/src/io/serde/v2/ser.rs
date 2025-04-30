@@ -1,4 +1,6 @@
-use crate::io::GraphSONSerializer;
+use crate::io::serde::types::v2::*;
+use crate::io::serde::v2::ser;
+use crate::io::{GraphSONSerializer, V2};
 use crate::prelude::{
     traversal::{Order, Scope},
     Cardinality, Direction, GValue, GremlinError, GremlinResult, Merge, ToGValue, T,
@@ -6,10 +8,65 @@ use crate::prelude::{
 use serde_json::{json, Map, Value};
 use std::collections::HashMap;
 
+impl GraphSONSerializer for V2 {
+    fn serialize(value: &GValue) -> GremlinResult<Value> {
+        match value {
+            // Core
+            GValue::Int32(_) => ser::int32(value),
+            GValue::Int64(_) => ser::int64(value),
+            GValue::Float(_) => ser::float(value),
+            GValue::Double(_) => ser::double(value),
+            GValue::String(_) => ser::string(value),
+            GValue::Date(_) => ser::date(value),
+            GValue::Timestamp(_) => ser::timestamp(value),
+            GValue::Uuid(_) => ser::uuid(value),
+            // Structure
+            GValue::Edge(_) => ser::edge::<Self>(value),
+            GValue::Path(_) => ser::path::<Self>(value),
+            GValue::Property(_) => ser::property::<Self>(value),
+            GValue::StarGraph(_) => ser::star_graph::<Self>(value),
+            // GValue::TinkerGraph(_) => todo!("v2::tinkergraph"),
+            // GValue::Tree(_) => todo!("v2::tree"),
+            GValue::Vertex(_) => ser::vertex::<Self>(value),
+            GValue::VertexProperty(_) => ser::vertex_property::<Self>(value),
+            // Process
+            // GValue::Barrier(_) => todo!("v2::barrier"),
+            // GValue::Binding(_) => todo!("v2::binding"),
+            GValue::Bytecode(_) => ser::bytecode::<Self>(value),
+            GValue::Cardinality(_) => ser::cardinality(value),
+            GValue::Column(_) => ser::column(value),
+            GValue::Direction(_) => ser::direction(value),
+            // GValue::DT(_) => todo!("v2::dt"),
+            // GValue::Lambda(_) => todo!("v2::lambda"),
+            GValue::Merge(_) => ser::merge(value),
+            // GValue::Metrics(_) => todo!("v2::metrics"),
+            // GValue::Operator(_) => todo!("v2::operator"),
+            GValue::Order(_) => ser::order(value),
+            GValue::P(_) => ser::p::<Self>(value),
+            // GValue::Pick(_) => todo!("v2::pick"),
+            GValue::Pop(_) => ser::pop(value),
+            GValue::Scope(_) => ser::scope(value),
+            GValue::T(_) => ser::t(value),
+            GValue::TextP(_) => ser::text_p::<Self>(value),
+            GValue::TraversalMetrics(_) => todo!("v2::traversalmetrics"),
+            GValue::Traverser(_) => todo!("v2::traverser"),
+
+            // GValue::List(_) => ser::list::<Self>(value),
+            // GValue::Set(_) => ser::set::<Self>(value),
+            // GValue::P(_) => ser::p::<Self>(value),
+
+            // GValue::Map(_) => ser::map::<Self>(value),
+            // GValue::Bool(_) => ser::bool(value),
+            GValue::Null => Ok(serde_json::Value::Null),
+            value => panic!("Unsupported type {:?}", value),
+        }
+    }
+}
+
 pub(crate) fn double(value: &GValue) -> GremlinResult<Value> {
     let double = get_value!(value, GValue::Double)?;
     Ok(json!({
-        "@type" : "g:Double",
+        "@type" : DOUBLE,
         "@value" : double,
     }))
 }
@@ -17,7 +74,7 @@ pub(crate) fn double(value: &GValue) -> GremlinResult<Value> {
 pub(crate) fn float(value: &GValue) -> GremlinResult<Value> {
     let float = get_value!(value, GValue::Float)?;
     Ok(json!({
-        "@type" : "g:Float",
+        "@type" : FLOAT,
         "@value" : float,
     }))
 }
@@ -25,7 +82,7 @@ pub(crate) fn float(value: &GValue) -> GremlinResult<Value> {
 pub(crate) fn int32(value: &GValue) -> GremlinResult<Value> {
     let int32 = get_value!(value, GValue::Int32)?;
     Ok(json!({
-        "@type" : "g:Int32",
+        "@type" : INT,
         "@value" : int32,
     }))
 }
@@ -33,7 +90,7 @@ pub(crate) fn int32(value: &GValue) -> GremlinResult<Value> {
 pub(crate) fn int64(value: &GValue) -> GremlinResult<Value> {
     let int64 = get_value!(value, GValue::Int64)?;
     Ok(json!({
-        "@type" : "g:Int64",
+        "@type" : LONG,
         "@value" : int64,
     }))
 }
@@ -50,7 +107,7 @@ pub(crate) fn string(value: &GValue) -> GremlinResult<Value> {
 pub(crate) fn uuid(value: &GValue) -> GremlinResult<Value> {
     let uuid = get_value!(value, GValue::Uuid)?;
     Ok(json!({
-        "@type" : "g:UUID",
+        "@type" : UUID,
         "@value" : uuid.to_string()
     }))
 }
@@ -58,7 +115,15 @@ pub(crate) fn uuid(value: &GValue) -> GremlinResult<Value> {
 pub(crate) fn date(value: &GValue) -> GremlinResult<Value> {
     let date = get_value!(value, GValue::Date)?;
     Ok(json!({
-        "@type" : "g:Date",
+        "@type" : DATE,
+        "@value" : date.timestamp_millis()
+    }))
+}
+
+pub(crate) fn timestamp(value: &GValue) -> GremlinResult<Value> {
+    let date = get_value!(value, GValue::Timestamp)?;
+    Ok(json!({
+        "@type" : TIMESTAMP,
         "@value" : date.timestamp_millis()
     }))
 }
@@ -92,7 +157,7 @@ pub(crate) fn set<S: GraphSONSerializer>(value: &GValue) -> GremlinResult<Value>
 pub(crate) fn p<S: GraphSONSerializer>(value: &GValue) -> GremlinResult<Value> {
     let p = get_value!(value, GValue::P)?;
     Ok(json!({
-        "@type" : "g:P",
+        "@type" : P,
         "@value" : {
             "predicate" : p.operator(),
             "value" : S::serialize(p.value())?
@@ -134,7 +199,7 @@ pub(crate) fn bytecode<S: GraphSONSerializer>(value: &GValue) -> GremlinResult<V
         .collect();
 
     Ok(json!({
-        "@type" : "g:Bytecode",
+        "@type" : BYTECODE,
         "@value" : {
             "step" : steps?,
             "source" : sources?
@@ -162,7 +227,7 @@ pub(crate) fn vertex<S: GraphSONSerializer>(value: &GValue) -> GremlinResult<Val
 
     let value = if properties.is_empty() {
         json!({
-            "@type" : "g:Vertex",
+            "@type" : VERTEX,
             "@value" : {
                 "id" :  id,
                 "label": v.label(),
@@ -170,7 +235,7 @@ pub(crate) fn vertex<S: GraphSONSerializer>(value: &GValue) -> GremlinResult<Val
         })
     } else {
         json!({
-            "@type" : "g:Vertex",
+            "@type" : VERTEX,
             "@value" : {
                 "id" :  id,
                 "label": v.label(),
@@ -187,7 +252,7 @@ pub fn vertex_property<S: GraphSONSerializer>(value: &GValue) -> GremlinResult<V
 
     let blob = if let Some(vertex_id) = &property.vertex {
         json!({
-            "@type" : "g:VertexProperty",
+            "@type" : VERTEX_PROPERTY,
             "@value" : {
                 "id" : S::serialize(&property.id.to_gvalue())?,
                 "value" : S::serialize(&property.value)?,
@@ -197,7 +262,7 @@ pub fn vertex_property<S: GraphSONSerializer>(value: &GValue) -> GremlinResult<V
         })
     } else {
         json!({
-            "@type" : "g:VertexProperty",
+            "@type" : VERTEX_PROPERTY,
             "@value" : {
                 "id" : S::serialize(&property.id.to_gvalue())?,
                 "value" : S::serialize(&property.value)?,
@@ -221,7 +286,7 @@ pub(crate) fn edge<S: GraphSONSerializer>(value: &GValue) -> GremlinResult<Value
 
     let value = if properties.is_empty() {
         json!({
-            "@type" : "g:Edge",
+            "@type" : EDGE,
             "@value" : {
                 "id" :  S::serialize(&e.id().to_gvalue())?,
                 "label": S::serialize(&e.label().to_gvalue())?,
@@ -233,7 +298,7 @@ pub(crate) fn edge<S: GraphSONSerializer>(value: &GValue) -> GremlinResult<Value
         })
     } else {
         json!({
-            "@type" : "g:Edge",
+            "@type" : EDGE,
             "@value" : {
                 "id" :  S::serialize(&e.id().to_gvalue())?,
                 "label": S::serialize(&e.label().to_gvalue())?,
@@ -269,11 +334,36 @@ pub(crate) fn path<S: GraphSONSerializer>(value: &GValue) -> GremlinResult<Value
     let path = get_value!(value, GValue::Path)?;
 
     Ok(json!({
-        "@type" : "g:Path",
+        "@type" : PATH,
         "@value": {
             "labels" : S::serialize(&path.labels)?,
             "objects" : S::serialize(&path.objects)?,
         }
+    }))
+}
+
+pub(crate) fn property<S: GraphSONSerializer>(value: &GValue) -> GremlinResult<Value> {
+    let property = get_value!(value, GValue::Property)?;
+    let json = match &*property.element {
+        GValue::Null => json!({
+              "@type": PROPERTY,
+              "value": S::serialize(&property.value)?,
+        }),
+        gvalue => json!({
+              "@type": PROPERTY,
+              "value": S::serialize(&property.value)?,
+              "element": S::serialize(gvalue)?,
+        }),
+    };
+
+    Ok(json)
+}
+
+pub(crate) fn star_graph<S: GraphSONSerializer>(value: &GValue) -> GremlinResult<Value> {
+    let star = get_value!(value, GValue::StarGraph)?;
+    let binding = GValue::Vertex(star.into());
+    Ok(json!({
+        "starVertex": vertex::<S>(&binding)?
     }))
 }
 
@@ -287,7 +377,7 @@ pub(crate) fn t(value: &GValue) -> GremlinResult<Value> {
     };
 
     Ok(json!({
-        "@type" : "g:T",
+        "@type" : T,
         "@value" : v
     }))
 }
@@ -301,7 +391,7 @@ pub(crate) fn scope(value: &GValue) -> GremlinResult<Value> {
     };
 
     Ok(json!({
-        "@type" : "g:Scope",
+        "@type" : SCOPE,
         "@value" : v
     }))
 }
@@ -316,7 +406,7 @@ pub(crate) fn order(value: &GValue) -> GremlinResult<Value> {
     };
 
     Ok(json!({
-        "@type" : "g:Order",
+        "@type" : ORDER,
         "@value" : v
     }))
 }
@@ -333,7 +423,7 @@ pub(crate) fn bool(value: &GValue) -> GremlinResult<Value> {
 pub(crate) fn text_p<S: GraphSONSerializer>(value: &GValue) -> GremlinResult<Value> {
     let text_p = get_value!(value, GValue::TextP)?;
     Ok(json!({
-        "@type" : "g:TextP",
+        "@type" : TEXT_P,
         "@value" : {
             "predicate" : text_p.operator(),
             "value" : S::serialize(text_p.value())?
@@ -344,7 +434,7 @@ pub(crate) fn text_p<S: GraphSONSerializer>(value: &GValue) -> GremlinResult<Val
 pub(crate) fn pop(value: &GValue) -> GremlinResult<Value> {
     let pop = get_value!(value, GValue::Pop)?;
     Ok(json!({
-        "@type": "g:Pop",
+        "@type": POP,
         "@value": *pop.to_string(),
     }))
 }
@@ -357,7 +447,7 @@ pub(crate) fn cardinality(value: &GValue) -> GremlinResult<Value> {
         Cardinality::Set => "set",
     };
     Ok(json!({
-        "@type" : "g:Cardinality",
+        "@type" : CARDINALITY,
         "@value" : v
     }))
 }
@@ -371,7 +461,7 @@ pub(crate) fn merge(value: &GValue) -> GremlinResult<Value> {
         Merge::InV => "inV",
     };
     Ok(json!({
-        "@type" : "g:Merge",
+        "@type" : MERGE,
         "@value" : merge_option
     }))
 }
@@ -383,7 +473,7 @@ pub(crate) fn direction(value: &GValue) -> GremlinResult<Value> {
         Direction::In | Direction::To => "IN",
     };
     Ok(json!({
-        "@type" : "g:Direction",
+        "@type" : DIRECTION,
         "@value" : direction_str,
     }))
 }
@@ -395,7 +485,7 @@ pub(crate) fn column(value: &GValue) -> GremlinResult<Value> {
         crate::structure::Column::Values => "values",
     };
     Ok(json!({
-        "@type" : "g:Column",
+        "@type" : COLUMN,
         "@value" : column,
     }))
 }

@@ -1,3 +1,77 @@
+pub struct Test {
+    pub serial: serde_json::Value,
+    pub object: crate::prelude::GValue,
+}
+
+macro_rules! test_prelude {
+    () => {
+        use crate::io::serde::tests::{test, Test};
+        use crate::prelude::*;
+        use chrono::TimeZone;
+        use serde_json::json;
+    };
+}
+
+macro_rules! test {
+    ($fun:ident, $engine:ident, $case:expr) => {
+        mod $fun {
+            pub(self) use super::*;
+
+            lazy_static::lazy_static! {
+                pub static ref TEST_CASE: Test = $case;
+            }
+
+            mod deserialize {
+                pub(self) use super::*;
+                use crate::prelude::GraphSONDeserializer;
+
+                #[test]
+                fn ok() {
+                    let result = $engine::deserialize(&TEST_CASE.serial);
+                    assert!(result.is_ok(), "Deserialization failed");
+                }
+
+                #[test]
+                fn accurate() {
+                    let result = $engine::deserialize(&TEST_CASE.serial);
+                    assert!(result.is_ok(), "Deserialization failed");
+                    assert_eq!(
+                        TEST_CASE.object,
+                        result.unwrap(),
+                        "Deserialization doesn't match expectation"
+                    );
+                }
+            }
+
+            mod serialize {
+                pub(self) use super::*;
+                use crate::prelude::GraphSONSerializer;
+
+                #[test]
+                fn ok() {
+                    let result = $engine::serialize(&TEST_CASE.object);
+                    assert!(result.is_ok(), "Serialization failed");
+                }
+
+                #[test]
+                fn accurate() {
+                    let result = $engine::serialize(&TEST_CASE.object);
+                    assert!(result.is_ok(), "Serialization failed");
+                    assert_eq!(
+                        TEST_CASE.serial,
+                        result.unwrap(),
+                        "Serialization doesn't match expectation"
+                    );
+                }
+            }
+        }
+    };
+}
+
+pub(crate) use {test, test_prelude};
+
+/*
+
 use super::*;
 use crate::prelude::{edge, vertex};
 use serde_json::json;
@@ -462,14 +536,6 @@ mod cases {
     // TODO geometry tests
 }
 
-macro_rules! test {
-    ($fun:ident, $engine:ident, $case:ident) => {
-        #[test]
-        fn $fun() {
-            super::cases::$case.test::<crate::prelude::$engine>();
-        }
-    };
-}
 
 mod int32 {
     test!(v2, V2, INT32);
@@ -835,3 +901,4 @@ fn test_map_with_token() {
 
     assert_eq!(result, GValue::Map(value_map));
 }
+*/

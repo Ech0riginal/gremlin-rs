@@ -1,4 +1,4 @@
-macro_rules! graphson {
+macro_rules! graphson_io {
     ($id:ident) => {
         #[derive(Clone, Debug, Default)]
         pub struct $id;
@@ -8,6 +8,33 @@ macro_rules! graphson {
         unsafe impl Send for $id {}
 
         unsafe impl Sync for $id {}
+    };
+}
+
+macro_rules! graphson_types {
+    ($name:ident, $value:expr) => {
+        pub const $name: &'static str = $value;
+    };
+    { $module:ident, $($name:ident, $value:expr),* } => {
+        pub mod $module {
+            $(graphson_types!($name, $value);)*
+        }
+    };
+}
+
+macro_rules! graphson_deserializer {
+    { $tc:ident: $($tt:ident),* } => {
+        $(
+            types::$tc::$tt => de::$tc::$tt::<Self>(value),
+        )*
+    };
+}
+
+macro_rules! graphson_serializer {
+    { $tc:ident: $($tt:ident),* } => {
+        $(
+            GValue::$tt => ser::$tc::$tt::<Self>(value),
+        )*
     };
 }
 

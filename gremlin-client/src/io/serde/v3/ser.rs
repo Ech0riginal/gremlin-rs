@@ -3,6 +3,29 @@ use crate::prelude::{GValue, GraphSON, GremlinResult, ToGValue};
 use serde_json::{json, Value};
 
 pub use crate::io::serde::v2::ser::*;
+use crate::io::{V2, V3};
+
+impl GraphSONSerializer for V3 {
+    fn serialize(value: &GValue) -> GremlinResult<Value> {
+        match value {
+            GValue::List(_) => list::<Self>(value),
+            GValue::Map(_) => map::<Self>(value),
+            GValue::List(_) => list::<Self>(value),
+            GValue::Set(_) => set::<Self>(value),
+            GValue::P(_) => p::<Self>(value),
+            GValue::Bytecode(_) => bytecode::<Self>(value),
+            GValue::Vertex(_) => vertex::<Self>(value),
+            GValue::VertexProperty(_) => vertex_property::<Self>(value),
+            GValue::Edge(_) => edge::<Self>(value),
+            GValue::Map(_) => map::<Self>(value),
+            GValue::TextP(_) => text_p::<Self>(value),
+            GValue::Path(_) => path::<Self>(value),
+            GValue::Merge(_) => merge(value),
+            GValue::T(_) => t(value),
+            _ => V2::serialize(value),
+        }
+    }
+}
 
 pub(crate) fn list<S: GraphSONSerializer>(value: &GValue) -> GremlinResult<Value> {
     let list = get_value!(value, GValue::List)?;

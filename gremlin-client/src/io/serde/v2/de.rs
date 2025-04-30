@@ -1,5 +1,6 @@
-use crate::io::serde::types::v2::{G_METRICS, G_TRAVERSAL_EXPLANATION, G_TRAVERSAL_METRICS};
-use crate::io::GraphSONDeserializer;
+use crate::io::serde::v2::types::*;
+use crate::io::serde::v2::{de, types};
+use crate::io::{GraphSONDeserializer, V2};
 use crate::prelude::{
     Edge, GKey, GValue, GremlinError, GremlinResult, IntermediateRepr, Map, Metric, Path, Property,
     Token, TraversalExplanation, TraversalMetrics, Traverser, Vertex, VertexProperty, GID,
@@ -8,6 +9,79 @@ use crate::structure::List;
 use chrono::{TimeZone, Utc};
 use serde_json::Value;
 use std::collections::HashMap;
+
+impl GraphSONDeserializer for V2 {
+    fn deserialize(value: &Value) -> GremlinResult<GValue> {
+        let _debug = format!("{}", value);
+
+        match value {
+            Value::String(string) => Ok(string.into()),
+            Value::Number(_) => g64::<Self>(value),
+            Value::Object(obj) => {
+                let _obj_debug = format!("{:?}", obj);
+                if obj.contains_key("@type") {
+                    let _type = obj.get("@type").unwrap();
+                    let value = &obj
+                        .get("@value")
+                        .ok_or_else(|| GremlinError::Generic("Value missing".to_string()))?;
+
+                    match _type {
+                        Value::String(tyype) => match tyype.as_str() {
+                            types::core::INT => de::g32::<Self>(value),
+                            types::core::LONG => de::g64::<Self>(value),
+                            types::core::FLOAT => de::float32::<Self>(value),
+                            types::core::DOUBLE => de::float64::<Self>(value),
+                            // types::core::STRING => de::string(value),
+                            types::core::DATE => de::date::<Self>(value),
+                            types::core::TIMESTAMP => de::timestamp::<Self>(value),
+                            types::core::UUID => de::uuid::<Self>(value),
+                            types::structure::EDGE => de::edge::<Self>(value),
+                            types::structure::PATH => de::path::<Self>(value),
+                            types::structure::PROPERTY => de::property::<Self>(value),
+                            types::structure::STAR_GRAPH => todo!("support"),
+                            types::structure::TINKER_GRAPH => todo!("support"),
+                            types::structure::TREE => todo!("support"),
+                            types::structure::VERTEX => de::vertex::<Self>(value),
+                            types::structure::VERTEX_PROPERTY => de::vertex_property::<Self>(value),
+                            types::process::BARRIER => todo!("support"),
+                            types::process::BINDING => todo!("support"),
+                            types::process::BYTECODE => todo!("support"),
+                            types::process::CARDINALITY => todo!("support"),
+                            types::process::COLUMN => todo!("support"),
+                            types::process::DIRECTION => de::direction(value),
+                            types::process::DT => todo!("support"),
+                            types::process::LAMBDA => todo!("support"),
+                            types::process::MERGE => todo!("support"),
+                            types::process::METRICS => todo!("support"),
+                            types::process::OPERATOR => todo!("support"),
+                            types::process::ORDER => todo!("support"),
+                            types::process::P => todo!("support"),
+                            types::process::PICK => todo!("support"),
+                            types::process::POP => todo!("support"),
+                            types::process::SCOPE => todo!("support"),
+                            types::process::T => de::token(value),
+                            types::process::TEXT_P => todo!("support"),
+                            types::process::TRAVERSAL_METRICS => de::metrics::<Self>(value),
+                            types::process::TRAVERSER => de::traverser::<Self>(value),
+
+                            type_tag => Err({
+                                let msg = format!("Unexpected type-tag `{type_tag}`");
+                                GremlinError::Generic(msg)
+                            }),
+                        },
+
+                        _ => Err(GremlinError::Generic("Malformed Object".to_string())),
+                    }
+                } else {
+                    de::map::<Self>(value)
+                }
+            }
+            Value::Array(_) => list::<Self>(value),
+            Value::Bool(_) => map::<Self>(value),
+            Value::Null => Ok(GValue::Null),
+        }
+    }
+}
 
 /// Deserialize a JSON value to a GID
 pub(crate) fn id<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GID> {
@@ -26,25 +100,32 @@ pub(crate) fn id<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GID> {
 }
 
 /// Date deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_date_2)
-pub(crate) fn date(val: &Value) -> GremlinResult<GValue> {
+pub(crate) fn date<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let val = expect_i64!(val);
-    Ok(GValue::Date(Utc.timestamp_millis_opt(val).unwrap()))
+    let datetime = Utc.timestamp_millis_opt(val).unwrap();
+    Ok(GValue::Date(datetime))
+}
+
+pub(crate) fn timestamp<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
+    let val = expect_i64!(val);
+    let datetime = Utc.timestamp_millis_opt(val).unwrap();
+    Ok(GValue::Date(datetime))
 }
 
 /// Integer deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_integer_2)
-pub(crate) fn g32(val: &Value) -> GremlinResult<GValue> {
+pub(crate) fn g32<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let val = expect_i32!(val);
     Ok(GValue::Int32(val))
 }
 
 /// Long deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_long_2)
-pub(crate) fn g64(val: &Value) -> GremlinResult<GValue> {
+pub(crate) fn g64<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let val = expect_i64!(val);
     Ok(GValue::Int64(val))
 }
 
 /// String deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_long_2)
-pub(crate) fn string(val: &Value) -> GremlinResult<GValue> {
+pub(crate) fn string<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let val = match val {
         Value::String(str) => str.to_string(),
         _ => panic!("Invalid JSON"),
@@ -54,49 +135,49 @@ pub(crate) fn string(val: &Value) -> GremlinResult<GValue> {
 }
 
 /// UUID deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_uuid_2)
-pub(crate) fn uuid(val: &Value) -> GremlinResult<GValue> {
+pub(crate) fn uuid<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let val = get_value!(val, Value::String)?;
     let uuid = uuid::Uuid::parse_str(&val)?;
     Ok(GValue::Uuid(uuid))
 }
 
 /// Float deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_float_2)
-pub(crate) fn float32(val: &Value) -> GremlinResult<GValue> {
+pub(crate) fn float32<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let val = expect_float!(val);
     Ok(GValue::Float(val))
 }
-/// Double deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_float_2)
-pub(crate) fn float64(val: &Value) -> GremlinResult<GValue> {
+/// Double deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_double_2)
+pub(crate) fn float64<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let val = expect_double!(val);
     Ok(GValue::Double(val))
 }
 
 /// List deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_list)
-pub(crate) fn list<S: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
+pub(crate) fn list<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let val = get_value!(val, Value::Array)?;
     let mut elements = Vec::with_capacity(val.len());
     for item in val {
         let _debug = format!("{}", item);
-        let deserialization = S::deserialize(item);
+        let deserialization = D::deserialize(item);
         elements.push(deserialization?)
     }
     Ok(GValue::List(elements.into()))
 }
 
 /// Set deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_set)
-pub(crate) fn set<S: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
-    match list::<S>(val)? {
+pub(crate) fn set<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
+    match list::<D>(val)? {
         GValue::List(List(values)) => Ok(GValue::Set(values.into())),
         _ => panic!("Infallible"),
     }
 }
 
 /// Map deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_map)
-pub(crate) fn map<S: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
+pub(crate) fn map<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let val = get_value!(val, Value::Object)?;
     let mut map = HashMap::new();
     for (k, v) in val {
-        map.insert(GKey::String(k.to_string()), S::deserialize(v)?);
+        map.insert(GKey::String(k.to_string()), D::deserialize(v)?);
     }
     Ok(map.into())
 }
@@ -172,9 +253,9 @@ pub(crate) fn path<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue
 pub(crate) fn traversal_metrics<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let mut metrics = D::deserialize(val)?.take::<Map>()?;
 
-    let duration = remove_or_else(&mut metrics, "dur", G_TRAVERSAL_METRICS)?.take::<f64>()?;
+    let duration = remove_or_else(&mut metrics, "dur", TRAVERSAL_METRICS)?.take::<f64>()?;
 
-    let m = remove_or_else(&mut metrics, "metrics", G_TRAVERSAL_METRICS)?
+    let m = remove_or_else(&mut metrics, "metrics", TRAVERSAL_METRICS)?
         .take::<List>()?
         .take()
         .drain(0..)
@@ -186,26 +267,26 @@ pub(crate) fn traversal_metrics<D: GraphSONDeserializer>(val: &Value) -> Gremlin
 }
 
 /// Metrics deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_metrics)
-pub(crate) fn metric<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
+pub(crate) fn metrics<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let mut metric = D::deserialize(val)?.take::<Map>()?;
 
-    let duration = remove_or_else(&mut metric, "dur", G_METRICS)?.take::<f64>()?;
-    let id = remove_or_else(&mut metric, "id", G_METRICS)?.take::<String>()?;
-    let name = remove_or_else(&mut metric, "name", G_METRICS)?.take::<String>()?;
+    let duration = remove_or_else(&mut metric, "dur", METRICS)?.take::<f64>()?;
+    let id = remove_or_else(&mut metric, "id", METRICS)?.take::<String>()?;
+    let name = remove_or_else(&mut metric, "name", METRICS)?.take::<String>()?;
 
-    let mut counts = remove_or_else(&mut metric, "counts", G_METRICS)?.take::<Map>()?;
-    let traversers = remove_or_else(&mut counts, "traverserCount", G_METRICS)?.take::<i64>()?;
-    let count = remove_or_else(&mut counts, "elementCount", G_METRICS)?.take::<i64>()?;
+    let mut counts = remove_or_else(&mut metric, "counts", METRICS)?.take::<Map>()?;
+    let traversers = remove_or_else(&mut counts, "traverserCount", METRICS)?.take::<i64>()?;
+    let count = remove_or_else(&mut counts, "elementCount", METRICS)?.take::<i64>()?;
 
-    let mut annotations = remove(&mut metric, "annotations", G_METRICS)
+    let mut annotations = remove(&mut metric, "annotations", METRICS)
         .map(|e| e.take::<Map>())
         .unwrap_or_else(|| Ok(Map::empty()))?;
 
-    let perc_duration = remove(&mut annotations, "percentDur", G_METRICS)
+    let perc_duration = remove(&mut annotations, "percentDur", METRICS)
         .map(|e| e.take::<f64>())
         .unwrap_or_else(|| Ok(0.0))?;
 
-    let nested: GremlinResult<Vec<Metric>> = remove(&mut metric, "metrics", G_METRICS)
+    let nested: GremlinResult<Vec<Metric>> = remove(&mut metric, "metrics", METRICS)
         .map(|e| e.take::<List>())
         .unwrap_or_else(|| Ok(List::new(vec![])))?
         .take()
@@ -228,7 +309,7 @@ pub(crate) fn metric<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GVal
 pub(crate) fn explain<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let mut explain = D::deserialize(val)?.take::<Map>()?;
 
-    let original = remove_or_else(&mut explain, "original", G_TRAVERSAL_EXPLANATION)?
+    let original = remove_or_else(&mut explain, "original", TRAVERSAL_EXPLANATION)?
         .take::<List>()?
         .take()
         .drain(0..)
@@ -236,7 +317,7 @@ pub(crate) fn explain<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GVa
         .filter_map(Result::ok)
         .collect();
 
-    let finals = remove_or_else(&mut explain, "final", G_TRAVERSAL_EXPLANATION)?
+    let finals = remove_or_else(&mut explain, "final", TRAVERSAL_EXPLANATION)?
         .take::<List>()?
         .take()
         .drain(0..)
@@ -244,7 +325,7 @@ pub(crate) fn explain<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GVa
         .filter_map(Result::ok)
         .collect();
 
-    let intermediate = remove_or_else(&mut explain, "intermediate", G_TRAVERSAL_EXPLANATION)?
+    let intermediate = remove_or_else(&mut explain, "intermediate", TRAVERSAL_EXPLANATION)?
         .take::<List>()?
         .take()
         .drain(0..)
@@ -323,7 +404,7 @@ pub(crate) fn vertex_properties<D: GraphSONDeserializer>(
 }
 
 pub(crate) fn map_intermediate(mut m: Map) -> GremlinResult<IntermediateRepr> {
-    let traversal = remove_or_else(&mut m, "traversal", G_TRAVERSAL_EXPLANATION)?
+    let traversal = remove_or_else(&mut m, "traversal", TRAVERSAL_EXPLANATION)?
         .take::<List>()?
         .take()
         .drain(0..)
@@ -331,9 +412,9 @@ pub(crate) fn map_intermediate(mut m: Map) -> GremlinResult<IntermediateRepr> {
         .filter_map(Result::ok)
         .collect();
 
-    let strategy = remove_or_else(&mut m, "strategy", G_TRAVERSAL_EXPLANATION)?.take::<String>()?;
+    let strategy = remove_or_else(&mut m, "strategy", TRAVERSAL_EXPLANATION)?.take::<String>()?;
 
-    let category = remove_or_else(&mut m, "category", G_TRAVERSAL_EXPLANATION)?.take::<String>()?;
+    let category = remove_or_else(&mut m, "category", TRAVERSAL_EXPLANATION)?.take::<String>()?;
 
     Ok(IntermediateRepr::new(traversal, strategy, category))
 }

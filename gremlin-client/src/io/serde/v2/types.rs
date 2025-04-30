@@ -1,21 +1,52 @@
-pub const G_INT_32: &'static str = "g:Int32";
-pub const G_INT_64: &'static str = "g:Int64";
-pub const G_FLOAT: &'static str = "g:Float";
-pub const G_DOUBLE: &'static str = "g:Double";
-pub const G_STRING: &'static str = "g:String";
-pub const G_DATE: &'static str = "g:Date";
-pub const G_UUID: &'static str = "g:UUID";
-pub const G_LIST: &'static str = "g:List";
-pub const G_SET: &'static str = "g:Set";
-pub const G_MAP: &'static str = "g:Map";
-pub const G_T: &'static str = "g:T";
-pub const G_VERTEX: &'static str = "g:Vertex";
-pub const G_VERTEX_PROPERTY: &'static str = "g:VertexProperty";
-pub const G_PROPERTY: &'static str = "g:Property";
-pub const G_EDGE: &'static str = "g:Edge";
-pub const G_PATH: &'static str = "g:Path";
-pub const G_METRICS: &'static str = "g:Metrics";
-pub const G_TRAVERSAL_METRICS: &'static str = "g:TraversalMetrics";
-pub const G_TRAVERSAL_EXPLANATION: &'static str = "g:TraversalExplanation";
-pub const G_TRAVERSER: &'static str = "g:Traverser";
-pub const G_DIRECTION: &'static str = "g:Direction";
+graphson_types! {
+    core,
+    INT, "g:Int32",
+    LONG, "g:Int64",
+    FLOAT, "g:Float",
+    DOUBLE, "g:Double",
+    DATE, "g:Date",
+    TIMESTAMP, "g:Timestamp",
+    UUID, "g:UUID"
+}
+
+graphson_types! {
+    structure,
+    EDGE, "g:Edge",
+    PATH, "g:Path",
+    PROPERTY, "g:Property",
+    STAR_GRAPH, "g:StarGraph",
+    TINKER_GRAPH, "g:TinkerGraph",
+    TREE, "g:Tree",
+    VERTEX, "g:Vertex",
+    VERTEX_PROPERTY, "g:VertexProperty"
+
+}
+
+graphson_types! {
+    process,
+    BARRIER, "g:Barrier",
+    BINDING, "g:Binding",
+    BYTECODE, "g:Bytecode",
+    CARDINALITY, "g:Cardinality",
+    COLUMN, "g:Column",
+    DIRECTION, "g:Direction",
+    DT, "g:DT",
+    LAMBDA, "g:Lambda",
+    MERGE, "g:Merge",
+    METRICS, "g:Metrics",
+    OPERATOR, "g:Operator",
+    ORDER, "g:Order",
+    P, "g:P",
+    PICK, "g:Pick",
+    POP, "g:Pop",
+    SCOPE, "g:Scope",
+    T, "g:T",
+    TEXT_P, "g:TextP",
+    TRAVERSAL_EXPLANATION, "g:TraversalExplanation",
+    TRAVERSAL_METRICS, "g:TraversalMetrics",
+    TRAVERSER, "g:Traverser"
+}
+
+pub use self::core::*;
+pub use self::process::*;
+pub use self::structure::*;

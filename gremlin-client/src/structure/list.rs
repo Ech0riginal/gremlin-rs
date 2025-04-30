@@ -25,7 +25,7 @@ impl List {
     }
 }
 
-impl std::iter::IntoIterator for List {
+impl IntoIterator for List {
     type Item = GValue;
     type IntoIter = std::vec::IntoIter<Self::Item>;
     fn into_iter(self) -> Self::IntoIter {

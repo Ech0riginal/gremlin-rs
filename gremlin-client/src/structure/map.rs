@@ -135,6 +135,14 @@ impl<T: Into<GKey>> std::ops::Index<T> for Map {
     }
 }
 
+impl std::ops::Deref for Map {
+    type Target = HashMap<GKey, GValue>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
 impl IntoIterator for Map {
     type Item = (GKey, GValue);
     type IntoIter = IntoIter<GKey, GValue>;
@@ -151,7 +159,6 @@ impl std::iter::FromIterator<(String, GValue)> for Map {
             .collect())
     }
 }
-
 /// Possible key types in a [Map](struct.Map)
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug, PartialEq, Clone, Eq, Hash)]

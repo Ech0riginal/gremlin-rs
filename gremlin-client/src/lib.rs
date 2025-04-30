@@ -141,7 +141,7 @@ pub mod prelude {
     pub type GremlinResult<T> = Result<T, GremlinError>;
 
     pub use crate::client::GremlinClient;
-    pub use crate::io::{GraphSON, V3g, V2, V3};
+    pub use crate::io::{GraphSON, GraphSONDeserializer, GraphSONSerializer, V3g, V2, V3};
     pub use crate::options::*;
     pub use crate::{edge, vertex};
 

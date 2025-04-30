@@ -12,7 +12,7 @@ pub(crate) mod de;
 pub(crate) mod ser;
 pub(crate) mod types;
 
-graphson!(V3g);
+graphson_io!(V3g);
 
 impl GraphSONDeserializer for V3g {
     fn deserialize(value: &Value) -> GremlinResult<GValue> {

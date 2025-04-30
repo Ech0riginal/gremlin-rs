@@ -4,7 +4,7 @@ use crate::process::traversal::{Bytecode, Order, Scope, TraversalBuilder};
 use crate::structure::traverser::Traverser;
 use crate::structure::{
     label::LabelType, Cardinality, Edge, GKey, IntermediateRepr, List, Map, Metric, Path, Property,
-    Set, Token, TraversalExplanation, TraversalMetrics, Vertex, VertexProperty,
+    Set, StarGraph, Token, TraversalExplanation, TraversalMetrics, Vertex, VertexProperty,
 };
 use crate::structure::{Pop, TextP, P, T};
 use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
@@ -30,6 +30,7 @@ pub enum GValue {
     Float(f32),
     Double(f64),
     Date(Date),
+    Timestamp(Date),
     List(List),
     Set(Set),
     Map(Map),
@@ -55,6 +56,8 @@ pub enum GValue {
     Direction(Direction),
     Column(Column),
     BulkSet(Map),
+    Class(String),
+    StarGraph(StarGraph),
 }
 
 impl GValue {
@@ -77,21 +80,20 @@ impl std::fmt::Debug for GValue {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             GValue::Null => write!(f, "null"),
-            GValue::Vertex(_) => write!(f, "vertex"),
-            GValue::Edge(_) => write!(f, "edge"),
-            GValue::VertexProperty(_) => write!(f, "vertex_property"),
-            GValue::Property(_) => write!(f, "property"),
+            GValue::Vertex(v) => write!(f, "{:?}", v),
+            GValue::Edge(e) => write!(f, "{:?}", e),
+            GValue::VertexProperty(vp) => write!(f, "{:?}", vp),
+            GValue::Property(p) => write!(f, "{:?}", p),
             GValue::Uuid(uuid) => write!(f, "\"{}\"", uuid.to_string()),
             GValue::Int32(v) => write!(f, "{}", v),
             GValue::Int64(v) => write!(f, "{}", v),
             GValue::Float(v) => write!(f, "{}", v),
             GValue::Double(v) => write!(f, "{}", v),
             GValue::Date(d) => write!(f, "{}", d),
-            GValue::List(_) => write!(f, "List"),
-            GValue::Set(_) => write!(f, "Set"),
-            GValue::Map(map) => {
-                write!(f, "{:?}", map)
-            }
+            GValue::Timestamp(d) => write!(f, "{}", d),
+            GValue::List(l) => write!(f, "{:?}", l),
+            GValue::Set(s) => write!(f, "{:?}", s),
+            GValue::Map(map) => write!(f, "{:?}", map),
             GValue::Token(t) => write!(f, "{}", t.value()),
             GValue::String(string) => write!(f, "\"{}\"", string),
             GValue::Path(_) => write!(f, "Path"),
@@ -114,6 +116,8 @@ impl std::fmt::Debug for GValue {
             GValue::Direction(_) => write!(f, "Direction"),
             GValue::Column(_) => write!(f, "Column"),
             GValue::BulkSet(_) => write!(f, "BulkSet"),
+            GValue::Class(_) => write!(f, "Class"),
+            GValue::StarGraph(star) => write!(f, "{:?}", star),
         }
     }
 }

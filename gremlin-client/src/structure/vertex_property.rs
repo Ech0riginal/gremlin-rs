@@ -1,5 +1,6 @@
 use crate::prelude::{GremlinError, GremlinResult};
 use crate::structure::{GValue, Property, GID};
+use std::collections::HashMap;
 
 use crate::conversion::{BorrowFromGValue, FromGValue};
 
@@ -62,6 +63,7 @@ pub struct VertexProperty {
     pub(crate) id: GID,
     pub(crate) value: Box<GValue>,
     pub(crate) vertex: Option<GID>,
+    pub(crate) properties: HashMap<String, GValue>,
 }
 
 impl VertexProperty {
@@ -76,6 +78,7 @@ impl VertexProperty {
             label: label.into(),
             value: Box::new(value.into()),
             vertex: None,
+            properties: Default::default(),
         }
     }
 

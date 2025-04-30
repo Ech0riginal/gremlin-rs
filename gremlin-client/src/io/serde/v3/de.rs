@@ -1,14 +1,38 @@
 //! GraphSON V3 [docs](http://tinkerpop.apache.org/docs/3.4.1/dev/io/)
 
-use crate::io::serde::types::v2::{G_METRICS, G_TRAVERSAL_METRICS};
+use crate::io::serde::v3::types::*;
 use crate::io::serde::GraphSONDeserializer;
-use crate::prelude::{
-    FromGValue, GKey, GValue, GremlinError, GremlinResult, List, Map, Metric, TraversalMetrics,
-};
+use crate::io::{V2, V3};
+use crate::prelude::*;
 use serde_json::Value;
 use std::collections::HashMap;
 
 pub(crate) use crate::io::serde::v2::de::*;
+
+impl GraphSONDeserializer for V3 {
+    fn deserialize(value: &Value) -> GremlinResult<GValue> {
+        match value {
+            Value::Bool(_) | Value::String(_) => V2::deserialize(value),
+            _ => {
+                let _type = match &value["@type"] {
+                    Value::String(e) => Ok(e),
+                    _type => Err(GremlinError::Json(format!("Unexpected type: {:?}", _type))),
+                }?;
+
+                match _type.as_str() {
+                    LIST => list::<Self>(&value["@value"]),
+                    MAP => map::<Self>(&value["@value"]),
+                    PATH => path::<Self>(&value["@value"]),
+                    METRICS => metrics::<Self>(&value["@value"]),
+                    TRAVERSAL_METRICS => traversal_metrics::<Self>(&value["@value"]),
+                    SET => set::<Self>(&value["@value"]),
+                    BULK_SET => bulkset::<Self>(&value["@value"]),
+                    _ => V2::deserialize(value),
+                }
+            }
+        }
+    }
+}
 
 /// List deserializer [docs](http://tinkerpop.apache.org/docs/3.4.1/dev/io/#_list)
 pub(crate) fn list<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
@@ -101,9 +125,9 @@ pub(crate) fn bulkset<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GVa
 pub(crate) fn traversal_metrics<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let mut metrics = D::deserialize(&val)?.take::<Map>()?;
 
-    let duration = remove_or_else(&mut metrics, "dur", G_TRAVERSAL_METRICS)?.take::<f64>()?;
+    let duration = remove_or_else(&mut metrics, "dur", TRAVERSAL_METRICS)?.take::<f64>()?;
 
-    let m = remove_or_else(&mut metrics, "metrics", G_TRAVERSAL_METRICS)?
+    let m = remove_or_else(&mut metrics, "metrics", TRAVERSAL_METRICS)?
         .take::<List>()?
         .take()
         .drain(0..)
@@ -118,23 +142,23 @@ pub(crate) fn traversal_metrics<D: GraphSONDeserializer>(val: &Value) -> Gremlin
 pub(crate) fn metrics<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let mut metric = D::deserialize(&val)?.take::<Map>()?;
 
-    let duration = remove_or_else(&mut metric, "dur", G_METRICS)?.take::<f64>()?;
-    let id = remove_or_else(&mut metric, "id", G_METRICS)?.take::<String>()?;
-    let name = remove_or_else(&mut metric, "name", G_METRICS)?.take::<String>()?;
+    let duration = remove_or_else(&mut metric, "dur", METRICS)?.take::<f64>()?;
+    let id = remove_or_else(&mut metric, "id", METRICS)?.take::<String>()?;
+    let name = remove_or_else(&mut metric, "name", METRICS)?.take::<String>()?;
 
-    let mut counts = remove_or_else(&mut metric, "counts", G_METRICS)?.take::<Map>()?;
-    let traversers = remove_or_else(&mut counts, "traverserCount", G_METRICS)?.take::<i64>()?;
-    let count = remove_or_else(&mut counts, "elementCount", G_METRICS)?.take::<i64>()?;
+    let mut counts = remove_or_else(&mut metric, "counts", METRICS)?.take::<Map>()?;
+    let traversers = remove_or_else(&mut counts, "traverserCount", METRICS)?.take::<i64>()?;
+    let count = remove_or_else(&mut counts, "elementCount", METRICS)?.take::<i64>()?;
 
-    let mut annotations = remove(&mut metric, "annotations", G_METRICS)
+    let mut annotations = remove(&mut metric, "annotations", METRICS)
         .map(|e| e.take::<Map>())
         .unwrap_or_else(|| Ok(Map::empty()))?;
 
-    let perc_duration = remove(&mut annotations, "percentDur", G_METRICS)
+    let perc_duration = remove(&mut annotations, "percentDur", METRICS)
         .map(|e| e.take::<f64>())
         .unwrap_or_else(|| Ok(0.0))?;
 
-    let nested: GremlinResult<Vec<Metric>> = remove(&mut metric, "metrics", G_METRICS)
+    let nested: GremlinResult<Vec<Metric>> = remove(&mut metric, "metrics", METRICS)
         .map(|e| e.take::<List>())
         .unwrap_or_else(|| Ok(List::new(vec![])))?
         .take()

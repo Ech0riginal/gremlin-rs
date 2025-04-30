@@ -4,7 +4,7 @@ mod v3g;
 
 mod placeholder;
 #[cfg(test)]
-mod tests;
+pub(self) mod tests;
 
 pub use v2::V2;
 pub use v3::V3;

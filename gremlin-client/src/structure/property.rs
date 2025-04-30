@@ -3,8 +3,9 @@ use crate::prelude::{GValue, GremlinResult};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Property {
-    label: String,
-    value: Box<GValue>,
+    pub(crate) label: String,
+    pub(crate) value: Box<GValue>,
+    pub(crate) element: Box<GValue>,
 }
 
 impl Property {
@@ -16,6 +17,7 @@ impl Property {
         Property {
             label: label.into(),
             value: Box::new(value.into()),
+            element: Box::new(GValue::Null), // TODO
         }
     }
 
