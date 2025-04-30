@@ -9,73 +9,19 @@
 
 <br />
 
-<div align="center">
-  <a href="https://github.com/wolf4ood/gremlin-rs/actions?query=workflow%3ATests">
-    <img src="https://github.com/wolf4ood/gremlin-rs/workflows/Tests/badge.svg"
-    alt="Tests status" />
-  </a>
-  
-  <a href="https://coveralls.io/github/wolf4ood/gremlin-rs?branch=master">
-    <img src="https://coveralls.io/repos/github/wolf4ood/gremlin-rs/badge.svg?branch=master"
-    alt="Coverage status" />
-  </a>
-  <a href="https://crates.io/crates/gremlin-client">
-    <img src="https://img.shields.io/crates/d/gremlin-client.svg?style=flat-square"
-      alt="Download" />
-  </a>
-  <a href="https://docs.rs/gremlin-client">
-    <img src="https://img.shields.io/badge/docs-latest-blue.svg?style=flat-square"
-      alt="docs.rs docs" />
-  </a>
-
-   <a href="https://opensource.org/licenses/Apache-2.0">
-    <img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"
-      alt="license" />
-  </a>
-
-   <a href="https://deps.rs/repo/github/wolf4ood/gremlin-rs">
-    <img src="https://deps.rs/repo/github/wolf4ood/gremlin-rs/status.svg"
-      alt="license" />
-  </a>
-
-
-  
-</div>
-
-
-
 ## gremlin-client
 
-A Rust client for Apache TinkerPop™.
+An asynchronous Rust client for Apache TinkerPop™.
+###### Many kudos to [wolf4ood](https://github.com/wolf4ood/) for the original implementation, but this is an opinionated refactor aimed at purely asynchronous systems.
 
-
+**Note:** Janus is not currently supported but I have plans to support it in the future.
 
 ### Installation
 
-
-Install from [crates.io](https://crates.io/)
-
 ```toml
 [dependencies]
-gremlin-client = "0.8"
+gremlin-client = { git = "https://github.com/ech0riginal/gremlin-rs" }
 ```
-
-
-with [async-std](https://async.rs/) support 
-
-```toml
-[dependencies]
-gremlin-client = { version = "0.8", features = ["async-std-runtime"] }
-```
-
-with [tokio](https://tokio.rs/) support 
-
-```toml
-[dependencies]
-gremlin-client = { version = "0.4.0", features = ["tokio-runtime"] }
-```
-
-### Examples
 
 
 #### Basic usage
