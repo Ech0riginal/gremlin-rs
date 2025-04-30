@@ -1,17 +1,34 @@
 use crate::error::GremlinError;
+use crate::prelude::{GremlinResult, Token};
 use crate::structure::{Edge, GValue, Vertex};
-use crate::GremlinResult;
-use crate::Token;
 use std::collections::hash_map::IntoIter;
 use std::collections::{BTreeMap, HashMap};
 use std::convert::{TryFrom, TryInto};
-
+use std::fmt::Formatter;
 use super::{Direction, T};
 
 /// Represent a Map<[GKey](struct.GKey),[GValue](struct.GValue)> which has ability to allow for non-String keys.
 /// TinkerPop type [here](http://tinkerpop.apache.org/docs/current/dev/io/#_map)
-#[derive(Debug, PartialEq, Clone)]
+#[derive(PartialEq, Clone)]
 pub struct Map(HashMap<GKey, GValue>);
+
+impl std::fmt::Debug for Map {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{{ ")?;
+
+        if !self.0.is_empty() {
+            let mut iter = self.0.iter();
+            if let Some((k, v)) = iter.next() {
+                write!(f, "({:?}, {:?}), ", k, v)?;
+            }
+            while let Some((k, v)) = iter.next() {
+                write!(f, ", ({:?}, {:?})", k, v)?;
+            }
+        }
+
+        write!(f, "}}")
+    }
+}
 
 impl Map {
     pub(crate) fn empty() -> Map {

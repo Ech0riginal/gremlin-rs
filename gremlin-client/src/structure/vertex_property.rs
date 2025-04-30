@@ -1,5 +1,5 @@
+use crate::prelude::{GremlinError, GremlinResult};
 use crate::structure::{GValue, Property, GID};
-use crate::{GremlinError, GremlinResult};
 
 use crate::conversion::{BorrowFromGValue, FromGValue};
 
@@ -58,9 +58,10 @@ impl FromGValue for GProperty {
 }
 #[derive(Debug, PartialEq, Clone)]
 pub struct VertexProperty {
-    label: String,
-    id: GID,
-    value: Box<GValue>,
+    pub(crate) label: String,
+    pub(crate) id: GID,
+    pub(crate) value: Box<GValue>,
+    pub(crate) vertex: Option<GID>,
 }
 
 impl VertexProperty {
@@ -74,6 +75,7 @@ impl VertexProperty {
             id: id.into(),
             label: label.into(),
             value: Box::new(value.into()),
+            vertex: None,
         }
     }
 

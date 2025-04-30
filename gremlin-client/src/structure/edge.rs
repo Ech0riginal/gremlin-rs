@@ -5,11 +5,11 @@ use std::hash::Hasher;
 
 #[derive(Debug, Clone)]
 pub struct Edge {
-    id: GID,
-    label: String,
-    in_v: Vertex,
-    out_v: Vertex,
-    properties: HashMap<String, Property>,
+    pub(crate) id: GID,
+    pub(crate) label: String,
+    pub(crate) in_v: Vertex,
+    pub(crate) out_v: Vertex,
+    pub(crate) properties: HashMap<String, Property>,
 }
 
 impl Edge {

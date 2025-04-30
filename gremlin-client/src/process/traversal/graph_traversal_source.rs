@@ -1,22 +1,9 @@
-use crate::conversion::{FromGValue, ToGValue};
-use crate::process::traversal::strategies::{
-    RemoteStrategy, TraversalStrategies, TraversalStrategy,
+use crate::prelude::{
+    traversal::remote::{AsyncTerminator, MockTerminator, Terminator},
+    traversal::step::*,
+    traversal::{Bytecode, GraphTraversal, TraversalBuilder},
+    Edge, FromGValue, GIDs, GValue, GraphSON, GremlinClient, Labels, ToGValue, Vertex,
 };
-
-#[cfg(feature = "async_gremlin")]
-use crate::aio::process::traversal::remote::AsyncTerminator;
-#[cfg(feature = "async_gremlin")]
-use crate::aio::GremlinClient as GremlinAsyncClient;
-use crate::process::traversal::remote::{MockTerminator, SyncTerminator, Terminator};
-use crate::process::traversal::Bytecode;
-use crate::process::traversal::{GraphTraversal, TraversalBuilder};
-use crate::structure::GIDs;
-use crate::structure::Labels;
-use crate::structure::{Edge, GValue, Vertex};
-use crate::GremlinClient;
-
-use super::merge_edge::MergeEdgeStep;
-use super::merge_vertex::MergeVertexStep;
 
 #[derive(Clone)]
 pub struct GraphTraversalSource<A: Terminator<GValue>> {
@@ -32,21 +19,10 @@ impl<A: Terminator<GValue>> GraphTraversalSource<A> {
         GraphTraversalSource::new(MockTerminator {})
     }
 
-    pub fn with_remote(&self, client: GremlinClient) -> GraphTraversalSource<SyncTerminator> {
-        let mut strategies = TraversalStrategies::new(vec![]);
-
-        strategies.add_strategy(TraversalStrategy::Remote(RemoteStrategy::new(client)));
-
-        GraphTraversalSource {
-            term: SyncTerminator::new(strategies),
-        }
-    }
-
-    #[cfg(feature = "async_gremlin")]
-    pub fn with_remote_async(
+    pub fn with_remote<SD: GraphSON>(
         &self,
-        client: GremlinAsyncClient,
-    ) -> GraphTraversalSource<AsyncTerminator> {
+        client: GremlinClient<SD>,
+    ) -> GraphTraversalSource<AsyncTerminator<SD>> {
         GraphTraversalSource {
             term: AsyncTerminator::new(client),
         }

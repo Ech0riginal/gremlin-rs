@@ -1,7 +1,7 @@
-use crate::GValue;
+use crate::prelude::GValue;
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct List(Vec<GValue>);
+pub struct List(pub(crate) Vec<GValue>);
 
 impl List {
     pub fn new(elements: Vec<GValue>) -> Self {

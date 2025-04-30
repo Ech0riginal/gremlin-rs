@@ -1,9 +1,9 @@
-use crate::GValue;
+use crate::prelude::GValue;
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(PartialEq, Clone)]
 pub struct Bytecode {
     source_instructions: Vec<Instruction>,
-    step_instructions: Vec<Instruction>,
+    pub(crate) step_instructions: Vec<Instruction>,
 }
 
 impl Default for Bytecode {
@@ -42,10 +42,10 @@ lazy_static! {
         vec!["addV", "property", "addE", "from", "to", "drop", "mergeV", "mergeE"];
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(PartialEq, Clone)]
 pub struct Instruction {
-    operator: String,
-    args: Vec<GValue>,
+    pub(crate) operator: String,
+    pub(crate) args: Vec<GValue>,
 }
 
 impl Instruction {

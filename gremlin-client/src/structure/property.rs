@@ -1,6 +1,5 @@
 use crate::conversion::{BorrowFromGValue, FromGValue};
-use crate::GValue;
-use crate::GremlinResult;
+use crate::prelude::{GValue, GremlinResult};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Property {
