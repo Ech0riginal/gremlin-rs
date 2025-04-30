@@ -6,6 +6,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.11](https://github.com/Ech0riginal/gremlin-rs/compare/v0.8.10...v0.8.11) - 2025-04-30
+
+### Other
+
+- starting to shore up testing
+- make debugging more straight forward
+- it for the night
+- granularize tests
+- cleanup tests
+- wipe out previous test suite
+- init serde tests
+- graphson ser/de test generation
+- fmt
+- refactor
+- more idiomatic Merge
+- refactor tests
+- refactor de/serialization functionality
+- MergeV, MergeE, & Option Steps ([#214](https://github.com/Ech0riginal/gremlin-rs/pull/214))
+
 ## [0.8.10](https://github.com/wolf4ood/gremlin-rs/compare/v0.8.9...v0.8.10) - 2024-05-13
 
 ### Other
