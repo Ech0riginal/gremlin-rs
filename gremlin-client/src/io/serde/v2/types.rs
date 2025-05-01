@@ -16,7 +16,7 @@ graphson_types! {
     PATH, "g:Path",
     PROPERTY, "g:Property",
     STAR_GRAPH, "g:StarGraph",
-    TINKER_GRAPH, "g:TinkerGraph",
+    TINKER_GRAPH, "tinker:graph",
     TREE, "g:Tree",
     VERTEX, "g:Vertex",
     VERTEX_PROPERTY, "g:VertexProperty"

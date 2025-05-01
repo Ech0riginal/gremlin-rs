@@ -17,60 +17,13 @@ impl GraphSONDeserializer for V2 {
             Value::Object(obj) => {
                 let _obj_debug = format!("{:?}", obj);
                 if obj.contains_key("@type") {
-                    let _type = obj.get("@type").unwrap();
-                    let inner_value = obj
+                    let tag = obj.get("@type").unwrap();
+                    let value = obj
                         .get("@value")
                         .ok_or_else(|| GremlinError::Generic("Value missing".to_string()))?;
-
-                    match _type {
-                        Value::String(tyype) => match tyype.as_str() {
-                            CLASS => class::<Self>(inner_value),
-                            INT => g32::<Self>(inner_value),
-                            LONG => g64::<Self>(inner_value),
-                            FLOAT => float32::<Self>(inner_value),
-                            DOUBLE => float64::<Self>(inner_value),
-                            DATE => date::<Self>(inner_value),
-                            TIMESTAMP => timestamp::<Self>(inner_value),
-                            UUID => uuid::<Self>(inner_value),
-                            EDGE => edge::<Self>(inner_value),
-                            PATH => path::<Self>(inner_value),
-                            PROPERTY => property::<Self>(inner_value),
-                            STAR_GRAPH => todo!("support"),
-                            TINKER_GRAPH => todo!("support"),
-                            TREE => tree::<Self>(inner_value),
-                            VERTEX => vertex::<Self>(inner_value),
-                            VERTEX_PROPERTY => vertex_property::<Self>(inner_value),
-                            BARRIER => todo!("support"),
-                            BINDING => todo!("support"),
-                            BYTECODE => todo!("support"),
-                            CARDINALITY => todo!("support"),
-                            COLUMN => todo!("support"),
-                            DIRECTION => direction(inner_value),
-                            DT => todo!("support"),
-                            LAMBDA => todo!("support"),
-                            MERGE => todo!("support"),
-                            METRICS => todo!("support"),
-                            OPERATOR => todo!("support"),
-                            ORDER => todo!("support"),
-                            P => todo!("support"),
-                            PICK => todo!("support"),
-                            POP => todo!("support"),
-                            SCOPE => todo!("support"),
-                            T => token(inner_value),
-                            TEXT_P => todo!("support"),
-                            TRAVERSAL_METRICS => metrics::<Self>(inner_value),
-                            TRAVERSER => traverser::<Self>(inner_value),
-
-                            type_tag => Err({
-                                let msg = format!("Unexpected type-tag `{type_tag}`");
-                                GremlinError::Generic(msg)
-                            }),
-                        },
-
-                        _ => Err(GremlinError::Generic("Malformed Object".to_string())),
-                    }
+                    core_deserializer::<Self>(tag, value)
                 } else {
-                    map::<Self>(value)
+                    funky_deserializer::<Self>(value)
                 }
             }
             Value::Array(values) => {
@@ -83,6 +36,64 @@ impl GraphSONDeserializer for V2 {
             Value::Bool(_) => map::<Self>(value),
             Value::Null => Ok(GValue::Null),
         }
+    }
+}
+
+fn core_deserializer<D: GraphSONDeserializer>(
+    type_tag: &Value,
+    value: &Value,
+) -> GremlinResult<GValue> {
+    let key = get_value!(type_tag, Value::String)?;
+
+    match key.as_ref() {
+        CLASS => class::<D>(value),
+        INT => g32::<D>(value),
+        LONG => g64::<D>(value),
+        FLOAT => float32::<D>(value),
+        DOUBLE => float64::<D>(value),
+        DATE => date::<D>(value),
+        TIMESTAMP => timestamp::<D>(value),
+        UUID => uuid::<D>(value),
+        EDGE => edge::<D>(value),
+        PATH => path::<D>(value),
+        PROPERTY => property::<D>(value),
+        TINKER_GRAPH => tinker_graph::<D>(value),
+        TREE => tree::<D>(value),
+        VERTEX => vertex::<D>(value),
+        VERTEX_PROPERTY => vertex_property::<D>(value),
+        BARRIER => todo!("support"),
+        BINDING => todo!("support"),
+        BYTECODE => todo!("support"),
+        CARDINALITY => todo!("support"),
+        COLUMN => todo!("support"),
+        DIRECTION => direction(value),
+        DT => todo!("support"),
+        LAMBDA => todo!("support"),
+        MERGE => todo!("support"),
+        METRICS => todo!("support"),
+        OPERATOR => todo!("support"),
+        ORDER => todo!("support"),
+        P => todo!("support"),
+        PICK => todo!("support"),
+        POP => todo!("support"),
+        SCOPE => todo!("support"),
+        T => token(value),
+        TEXT_P => todo!("support"),
+        TRAVERSAL_METRICS => metrics::<D>(value),
+        TRAVERSER => traverser::<D>(value),
+
+        type_tag => Err({
+            let msg = format!("Unexpected type-tag `{type_tag}`");
+            GremlinError::Generic(msg)
+        }),
+    }
+}
+
+fn funky_deserializer<D: GraphSONDeserializer>(value: &Value) -> GremlinResult<GValue> {
+    if let Some(_) = value.get("starVertex") {
+        star_graph::<D>(value)
+    } else {
+        map::<D>(value)
     }
 }
 
@@ -239,6 +250,15 @@ fn tree_branch<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<Branch> {
         key: Box::new(key),
         value: Box::new(value),
     })
+}
+
+fn star_graph<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
+    let value = val
+        .get("starVertex")
+        .ok_or(GremlinError::Json("Malformed StarGraph".into()))?;
+    let vertex = get_value!(D::deserialize(value)?, GValue::Vertex)?;
+    let yikes = vertex.into();
+    Ok(GValue::StarGraph(yikes))
 }
 
 /// Vertex deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_vertex_3)
@@ -438,6 +458,36 @@ pub(crate) fn property<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GV
         element: Box::new(element_obj),
     };
     Ok(GValue::Property(property))
+}
+
+pub fn tinker_graph<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
+    let vertex_values = get_value!(
+        val.get("vertices").ok_or(GremlinError::Json(
+            "TinkerGraph missing 'vertices' key".into()
+        ))?,
+        Value::Array
+    )?;
+    let edge_values = get_value!(
+        val.get("edges")
+            .ok_or(GremlinError::Json("TinkerGraph missing 'edges' key".into()))?,
+        Value::Array
+    )?;
+    let vertices = vertex_values
+        .into_iter()
+        .map(D::deserialize)
+        .collect::<GremlinResult<Vec<_>>>()?
+        .into_iter()
+        .map(|v| get_value!(v, GValue::Vertex).unwrap())
+        .collect::<Vec<_>>();
+    let edges = edge_values
+        .into_iter()
+        .map(D::deserialize)
+        .collect::<GremlinResult<Vec<_>>>()?
+        .into_iter()
+        .map(|v| get_value!(v, GValue::Edge).unwrap())
+        .collect::<Vec<_>>();
+
+    Ok(GValue::TinkerGraph(TinkerGraph { vertices, edges }))
 }
 
 /// Traverser deserializer [docs](http://tinkerpop.apache.org/docs/3.4.1/dev/io/#_traverser_2)

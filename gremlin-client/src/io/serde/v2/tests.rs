@@ -334,13 +334,520 @@ mod structure {
             }),
         }
     );
-    // I ain't doin all that right now
+
     test!(
         tinkergraph,
         V2,
         Test {
             serial: json!({ "@type" : "tinker:graph", "@value" : { "vertices" : [ { "@type" : "g:Vertex", "@value" : { "id" : { "@type" : "g:Int32", "@value" : 1 }, "label" : "person", "properties" : { "name" : [ { "@type" : "g:VertexProperty", "@value" : { "id" : { "@type" : "g:Int64", "@value" : 0 }, "value" : "marko", "vertex" : { "@type" : "g:Int32", "@value" : 1 }, "label" : "name" } } ], "location" : [ { "@type" : "g:VertexProperty", "@value" : { "id" : { "@type" : "g:Int64", "@value" : 6 }, "value" : "san diego", "vertex" : { "@type" : "g:Int32", "@value" : 1 }, "label" : "location", "properties" : { "startTime" : { "@type" : "g:Int32", "@value" : 1997 }, "endTime" : { "@type" : "g:Int32", "@value" : 2001 } } } }, { "@type" : "g:VertexProperty", "@value" : { "id" : { "@type" : "g:Int64", "@value" : 7 }, "value" : "santa cruz", "vertex" : { "@type" : "g:Int32", "@value" : 1 }, "label" : "location", "properties" : { "startTime" : { "@type" : "g:Int32", "@value" : 2001 }, "endTime" : { "@type" : "g:Int32", "@value" : 2004 } } } }, { "@type" : "g:VertexProperty", "@value" : { "id" : { "@type" : "g:Int64", "@value" : 8 }, "value" : "brussels", "vertex" : { "@type" : "g:Int32", "@value" : 1 }, "label" : "location", "properties" : { "startTime" : { "@type" : "g:Int32", "@value" : 2004 }, "endTime" : { "@type" : "g:Int32", "@value" : 2005 } } } }, { "@type" : "g:VertexProperty", "@value" : { "id" : { "@type" : "g:Int64", "@value" : 9 }, "value" : "santa fe", "vertex" : { "@type" : "g:Int32", "@value" : 1 }, "label" : "location", "properties" : { "startTime" : { "@type" : "g:Int32", "@value" : 2005 } } } } ] } } }, { "@type" : "g:Vertex", "@value" : { "id" : { "@type" : "g:Int32", "@value" : 7 }, "label" : "person", "properties" : { "name" : [ { "@type" : "g:VertexProperty", "@value" : { "id" : { "@type" : "g:Int64", "@value" : 1 }, "value" : "stephen", "vertex" : { "@type" : "g:Int32", "@value" : 7 }, "label" : "name" } } ], "location" : [ { "@type" : "g:VertexProperty", "@value" : { "id" : { "@type" : "g:Int64", "@value" : 10 }, "value" : "centreville", "vertex" : { "@type" : "g:Int32", "@value" : 7 }, "label" : "location", "properties" : { "startTime" : { "@type" : "g:Int32", "@value" : 1990 }, "endTime" : { "@type" : "g:Int32", "@value" : 2000 } } } }, { "@type" : "g:VertexProperty", "@value" : { "id" : { "@type" : "g:Int64", "@value" : 11 }, "value" : "dulles", "vertex" : { "@type" : "g:Int32", "@value" : 7 }, "label" : "location", "properties" : { "startTime" : { "@type" : "g:Int32", "@value" : 2000 }, "endTime" : { "@type" : "g:Int32", "@value" : 2006 } } } }, { "@type" : "g:VertexProperty", "@value" : { "id" : { "@type" : "g:Int64", "@value" : 12 }, "value" : "purcellville", "vertex" : { "@type" : "g:Int32", "@value" : 7 }, "label" : "location", "properties" : { "startTime" : { "@type" : "g:Int32", "@value" : 2006 } } } } ] } } }, { "@type" : "g:Vertex", "@value" : { "id" : { "@type" : "g:Int32", "@value" : 8 }, "label" : "person", "properties" : { "name" : [ { "@type" : "g:VertexProperty", "@value" : { "id" : { "@type" : "g:Int64", "@value" : 2 }, "value" : "matthias", "vertex" : { "@type" : "g:Int32", "@value" : 8 }, "label" : "name" } } ], "location" : [ { "@type" : "g:VertexProperty", "@value" : { "id" : { "@type" : "g:Int64", "@value" : 13 }, "value" : "bremen", "vertex" : { "@type" : "g:Int32", "@value" : 8 }, "label" : "location", "properties" : { "startTime" : { "@type" : "g:Int32", "@value" : 2004 }, "endTime" : { "@type" : "g:Int32", "@value" : 2007 } } } }, { "@type" : "g:VertexProperty", "@value" : { "id" : { "@type" : "g:Int64", "@value" : 14 }, "value" : "baltimore", "vertex" : { "@type" : "g:Int32", "@value" : 8 }, "label" : "location", "properties" : { "startTime" : { "@type" : "g:Int32", "@value" : 2007 }, "endTime" : { "@type" : "g:Int32", "@value" : 2011 } } } }, { "@type" : "g:VertexProperty", "@value" : { "id" : { "@type" : "g:Int64", "@value" : 15 }, "value" : "oakland", "vertex" : { "@type" : "g:Int32", "@value" : 8 }, "label" : "location", "properties" : { "startTime" : { "@type" : "g:Int32", "@value" : 2011 }, "endTime" : { "@type" : "g:Int32", "@value" : 2014 } } } }, { "@type" : "g:VertexProperty", "@value" : { "id" : { "@type" : "g:Int64", "@value" : 16 }, "value" : "seattle", "vertex" : { "@type" : "g:Int32", "@value" : 8 }, "label" : "location", "properties" : { "startTime" : { "@type" : "g:Int32", "@value" : 2014 } } } } ] } } }, { "@type" : "g:Vertex", "@value" : { "id" : { "@type" : "g:Int32", "@value" : 9 }, "label" : "person", "properties" : { "name" : [ { "@type" : "g:VertexProperty", "@value" : { "id" : { "@type" : "g:Int64", "@value" : 3 }, "value" : "daniel", "vertex" : { "@type" : "g:Int32", "@value" : 9 }, "label" : "name" } } ], "location" : [ { "@type" : "g:VertexProperty", "@value" : { "id" : { "@type" : "g:Int64", "@value" : 17 }, "value" : "spremberg", "vertex" : { "@type" : "g:Int32", "@value" : 9 }, "label" : "location", "properties" : { "startTime" : { "@type" : "g:Int32", "@value" : 1982 }, "endTime" : { "@type" : "g:Int32", "@value" : 2005 } } } }, { "@type" : "g:VertexProperty", "@value" : { "id" : { "@type" : "g:Int64", "@value" : 18 }, "value" : "kaiserslautern", "vertex" : { "@type" : "g:Int32", "@value" : 9 }, "label" : "location", "properties" : { "startTime" : { "@type" : "g:Int32", "@value" : 2005 }, "endTime" : { "@type" : "g:Int32", "@value" : 2009 } } } }, { "@type" : "g:VertexProperty", "@value" : { "id" : { "@type" : "g:Int64", "@value" : 19 }, "value" : "aachen", "vertex" : { "@type" : "g:Int32", "@value" : 9 }, "label" : "location", "properties" : { "startTime" : { "@type" : "g:Int32", "@value" : 2009 } } } } ] } } }, { "@type" : "g:Vertex", "@value" : { "id" : { "@type" : "g:Int32", "@value" : 10 }, "label" : "software", "properties" : { "name" : [ { "@type" : "g:VertexProperty", "@value" : { "id" : { "@type" : "g:Int64", "@value" : 4 }, "value" : "gremlin", "vertex" : { "@type" : "g:Int32", "@value" : 10 }, "label" : "name" } } ] } } }, { "@type" : "g:Vertex", "@value" : { "id" : { "@type" : "g:Int32", "@value" : 11 }, "label" : "software", "properties" : { "name" : [ { "@type" : "g:VertexProperty", "@value" : { "id" : { "@type" : "g:Int64", "@value" : 5 }, "value" : "tinkergraph", "vertex" : { "@type" : "g:Int32", "@value" : 11 }, "label" : "name" } } ] } } } ], "edges" : [ { "@type" : "g:Edge", "@value" : { "id" : { "@type" : "g:Int32", "@value" : 13 }, "label" : "develops", "inVLabel" : "software", "outVLabel" : "person", "inV" : { "@type" : "g:Int32", "@value" : 10 }, "outV" : { "@type" : "g:Int32", "@value" : 1 }, "properties" : { "since" : { "@type" : "g:Int32", "@value" : 2009 } } } }, { "@type" : "g:Edge", "@value" : { "id" : { "@type" : "g:Int32", "@value" : 14 }, "label" : "develops", "inVLabel" : "software", "outVLabel" : "person", "inV" : { "@type" : "g:Int32", "@value" : 11 }, "outV" : { "@type" : "g:Int32", "@value" : 1 }, "properties" : { "since" : { "@type" : "g:Int32", "@value" : 2010 } } } }, { "@type" : "g:Edge", "@value" : { "id" : { "@type" : "g:Int32", "@value" : 15 }, "label" : "uses", "inVLabel" : "software", "outVLabel" : "person", "inV" : { "@type" : "g:Int32", "@value" : 10 }, "outV" : { "@type" : "g:Int32", "@value" : 1 }, "properties" : { "skill" : { "@type" : "g:Int32", "@value" : 4 } } } }, { "@type" : "g:Edge", "@value" : { "id" : { "@type" : "g:Int32", "@value" : 16 }, "label" : "uses", "inVLabel" : "software", "outVLabel" : "person", "inV" : { "@type" : "g:Int32", "@value" : 11 }, "outV" : { "@type" : "g:Int32", "@value" : 1 }, "properties" : { "skill" : { "@type" : "g:Int32", "@value" : 5 } } } }, { "@type" : "g:Edge", "@value" : { "id" : { "@type" : "g:Int32", "@value" : 17 }, "label" : "develops", "inVLabel" : "software", "outVLabel" : "person", "inV" : { "@type" : "g:Int32", "@value" : 10 }, "outV" : { "@type" : "g:Int32", "@value" : 7 }, "properties" : { "since" : { "@type" : "g:Int32", "@value" : 2010 } } } }, { "@type" : "g:Edge", "@value" : { "id" : { "@type" : "g:Int32", "@value" : 18 }, "label" : "develops", "inVLabel" : "software", "outVLabel" : "person", "inV" : { "@type" : "g:Int32", "@value" : 11 }, "outV" : { "@type" : "g:Int32", "@value" : 7 }, "properties" : { "since" : { "@type" : "g:Int32", "@value" : 2011 } } } }, { "@type" : "g:Edge", "@value" : { "id" : { "@type" : "g:Int32", "@value" : 19 }, "label" : "uses", "inVLabel" : "software", "outVLabel" : "person", "inV" : { "@type" : "g:Int32", "@value" : 10 }, "outV" : { "@type" : "g:Int32", "@value" : 7 }, "properties" : { "skill" : { "@type" : "g:Int32", "@value" : 5 } } } }, { "@type" : "g:Edge", "@value" : { "id" : { "@type" : "g:Int32", "@value" : 20 }, "label" : "uses", "inVLabel" : "software", "outVLabel" : "person", "inV" : { "@type" : "g:Int32", "@value" : 11 }, "outV" : { "@type" : "g:Int32", "@value" : 7 }, "properties" : { "skill" : { "@type" : "g:Int32", "@value" : 4 } } } }, { "@type" : "g:Edge", "@value" : { "id" : { "@type" : "g:Int32", "@value" : 21 }, "label" : "develops", "inVLabel" : "software", "outVLabel" : "person", "inV" : { "@type" : "g:Int32", "@value" : 10 }, "outV" : { "@type" : "g:Int32", "@value" : 8 }, "properties" : { "since" : { "@type" : "g:Int32", "@value" : 2012 } } } }, { "@type" : "g:Edge", "@value" : { "id" : { "@type" : "g:Int32", "@value" : 22 }, "label" : "uses", "inVLabel" : "software", "outVLabel" : "person", "inV" : { "@type" : "g:Int32", "@value" : 10 }, "outV" : { "@type" : "g:Int32", "@value" : 8 }, "properties" : { "skill" : { "@type" : "g:Int32", "@value" : 3 } } } }, { "@type" : "g:Edge", "@value" : { "id" : { "@type" : "g:Int32", "@value" : 23 }, "label" : "uses", "inVLabel" : "software", "outVLabel" : "person", "inV" : { "@type" : "g:Int32", "@value" : 11 }, "outV" : { "@type" : "g:Int32", "@value" : 8 }, "properties" : { "skill" : { "@type" : "g:Int32", "@value" : 3 } } } }, { "@type" : "g:Edge", "@value" : { "id" : { "@type" : "g:Int32", "@value" : 24 }, "label" : "uses", "inVLabel" : "software", "outVLabel" : "person", "inV" : { "@type" : "g:Int32", "@value" : 10 }, "outV" : { "@type" : "g:Int32", "@value" : 9 }, "properties" : { "skill" : { "@type" : "g:Int32", "@value" : 5 } } } }, { "@type" : "g:Edge", "@value" : { "id" : { "@type" : "g:Int32", "@value" : 25 }, "label" : "uses", "inVLabel" : "software", "outVLabel" : "person", "inV" : { "@type" : "g:Int32", "@value" : 11 }, "outV" : { "@type" : "g:Int32", "@value" : 9 }, "properties" : { "skill" : { "@type" : "g:Int32", "@value" : 3 } } } }, { "@type" : "g:Edge", "@value" : { "id" : { "@type" : "g:Int32", "@value" : 26 }, "label" : "traverses", "inVLabel" : "software", "outVLabel" : "software", "inV" : { "@type" : "g:Int32", "@value" : 11 }, "outV" : { "@type" : "g:Int32", "@value" : 10 } } } ] }}),
-            object: GValue::Null,
+            object: GValue::TinkerGraph(TinkerGraph {
+                vertices: vec![
+                    Vertex {
+                        id: GID::Int32(1),
+                        label: "person".into(),
+                        properties: {
+                            let mut tmp = HashMap::new();
+                            tmp.insert(
+                                "name".into(),
+                                vec![VertexProperty {
+                                    id: GID::Int64(0),
+                                    label: "name".into(),
+                                    value: Box::new(GValue::String("marko".into())),
+                                    vertex: Some(GID::Int32(1)),
+                                    properties: Default::default(),
+                                }],
+                            );
+                            tmp.insert(
+                                "location".into(),
+                                vec![
+                                    VertexProperty {
+                                        id: GID::Int64(6),
+                                        value: Box::new(GValue::String("san diego".into())),
+                                        label: "location".into(),
+                                        vertex: Some(GID::Int32(1)),
+                                        properties: Some({
+                                            let mut tmp2 = HashMap::new();
+                                            tmp2.insert("startTime".into(), GValue::Int32(1997));
+                                            tmp2.insert("endTime".into(), GValue::Int32(2001));
+                                            tmp2
+                                        }),
+                                    },
+                                    VertexProperty {
+                                        id: GID::Int64(7),
+                                        label: "location".into(),
+                                        value: Box::new(GValue::String("santa cruz".into())),
+                                        vertex: Some(GID::Int32(1)),
+                                        properties: Some({
+                                            let mut tmp2 = HashMap::new();
+                                            tmp2.insert("startTime".into(), GValue::Int32(2001));
+                                            tmp2.insert("endTime".into(), GValue::Int32(2004));
+                                            tmp2
+                                        }),
+                                    },
+                                    VertexProperty {
+                                        id: GID::Int64(8),
+                                        label: "location".into(),
+                                        value: Box::new(GValue::String("brussels".into())),
+                                        vertex: Some(GID::Int32(1)),
+                                        properties: Some({
+                                            let mut tmp2 = HashMap::new();
+                                            tmp2.insert("startTime".into(), GValue::Int32(2004));
+                                            tmp2.insert("endTime".into(), GValue::Int32(2005));
+                                            tmp2
+                                        }),
+                                    },
+                                    VertexProperty {
+                                        id: GID::Int64(9),
+                                        label: "location".into(),
+                                        value: Box::new(GValue::String("santa fe".into())),
+                                        vertex: Some(GID::Int32(1)),
+                                        properties: Some({
+                                            let mut tmp2 = HashMap::new();
+                                            tmp2.insert("startTime".into(), GValue::Int32(2005));
+                                            tmp2
+                                        }),
+                                    },
+                                ],
+                            );
+                            tmp
+                        },
+                    },
+                    Vertex {
+                        id: GID::Int32(7),
+                        label: "person".into(),
+                        properties: {
+                            let mut tmp = HashMap::new();
+                            tmp.insert(
+                                "name".into(),
+                                vec![VertexProperty {
+                                    id: GID::Int64(1),
+                                    value: Box::new(GValue::String("stephen".into())),
+                                    vertex: Some(GID::Int32(7)),
+                                    label: "name".into(),
+                                    properties: None,
+                                }],
+                            );
+                            tmp.insert(
+                                "location".into(),
+                                vec![
+                                    VertexProperty {
+                                        id: GID::Int64(10),
+                                        value: Box::new(GValue::String("centreville".into())),
+                                        vertex: Some(GID::Int32(7)),
+                                        label: "location".into(),
+                                        properties: Some({
+                                            let mut tmp = HashMap::new();
+                                            tmp.insert("startTime".into(), GValue::Int32(1990));
+                                            tmp.insert("endTime".into(), GValue::Int32(2000));
+                                            tmp
+                                        }),
+                                    },
+                                    VertexProperty {
+                                        id: GID::Int64(11),
+                                        value: Box::new(GValue::String("dulles".into())),
+                                        vertex: Some(GID::Int32(7)),
+                                        label: "location".into(),
+                                        properties: Some({
+                                            let mut tmp = HashMap::new();
+                                            tmp.insert("startTime".into(), GValue::Int32(2000));
+                                            tmp.insert("endTime".into(), GValue::Int32(2006));
+                                            tmp
+                                        }),
+                                    },
+                                    VertexProperty {
+                                        id: GID::Int64(12),
+                                        value: Box::new(GValue::String("purcellville".into())),
+                                        vertex: Some(GID::Int32(7)),
+                                        label: "location".into(),
+                                        properties: Some({
+                                            let mut tmp = HashMap::new();
+                                            tmp.insert("startTime".into(), GValue::Int32(2006));
+                                            tmp
+                                        }),
+                                    },
+                                ],
+                            );
+                            tmp
+                        },
+                    },
+                    Vertex {
+                        id: GID::Int32(8),
+                        label: "person".into(),
+                        properties: {
+                            let mut tmp = HashMap::new();
+                            tmp.insert(
+                                "name".into(),
+                                vec![VertexProperty {
+                                    id: GID::Int64(2),
+                                    value: Box::new(GValue::String("matthias".into())),
+                                    vertex: Some(GID::Int32(8)),
+                                    label: "name".into(),
+                                    properties: None,
+                                }],
+                            );
+                            tmp.insert(
+                                "location".into(),
+                                vec![
+                                    VertexProperty {
+                                        id: GID::Int64(13),
+                                        value: Box::new(GValue::String("bremen".into())),
+                                        vertex: Some(GID::Int32(8)),
+                                        label: "location".into(),
+                                        properties: Some({
+                                            let mut tmp = HashMap::new();
+                                            tmp.insert("startTime".into(), GValue::Int32(2004));
+                                            tmp.insert("endTime".into(), GValue::Int32(2007));
+                                            tmp
+                                        }),
+                                    },
+                                    VertexProperty {
+                                        id: GID::Int64(14),
+                                        value: Box::new(GValue::String("baltimore".into())),
+                                        vertex: Some(GID::Int32(8)),
+                                        label: "location".into(),
+                                        properties: Some({
+                                            let mut tmp = HashMap::new();
+                                            tmp.insert("startTime".into(), GValue::Int32(2007));
+                                            tmp.insert("endTime".into(), GValue::Int32(2011));
+                                            tmp
+                                        }),
+                                    },
+                                    VertexProperty {
+                                        id: GID::Int64(15),
+                                        value: Box::new(GValue::String("oakland".into())),
+                                        vertex: Some(GID::Int32(8)),
+                                        label: "location".into(),
+                                        properties: Some({
+                                            let mut tmp = HashMap::new();
+                                            tmp.insert("startTime".into(), GValue::Int32(2011));
+                                            tmp.insert("endTime".into(), GValue::Int32(2014));
+                                            tmp
+                                        }),
+                                    },
+                                    VertexProperty {
+                                        id: GID::Int64(16),
+                                        value: Box::new(GValue::String("seattle".into())),
+                                        vertex: Some(GID::Int32(8)),
+                                        label: "location".into(),
+                                        properties: Some({
+                                            let mut tmp = HashMap::new();
+                                            tmp.insert("startTime".into(), GValue::Int32(2014));
+                                            tmp
+                                        }),
+                                    },
+                                ],
+                            );
+                            tmp
+                        },
+                    },
+                    Vertex {
+                        id: GID::Int32(9),
+                        label: "person".into(),
+                        properties: {
+                            let mut tmp = HashMap::new();
+                            tmp.insert(
+                                "name".into(),
+                                vec![VertexProperty {
+                                    id: GID::Int64(3),
+                                    value: Box::new(GValue::String("daniel".into())),
+                                    vertex: Some(GID::Int32(9)),
+                                    label: "name".into(),
+                                    properties: None,
+                                }],
+                            );
+                            tmp.insert(
+                                "location".into(),
+                                vec![
+                                    VertexProperty {
+                                        id: GID::Int64(17),
+                                        value: Box::new(GValue::String("spremberg".into())),
+                                        vertex: Some(GID::Int32(9)),
+                                        label: "location".into(),
+                                        properties: Some({
+                                            let mut tmp = HashMap::new();
+                                            tmp.insert("startTime".into(), GValue::Int32(1982));
+                                            tmp.insert("endTime".into(), GValue::Int32(2005));
+                                            tmp
+                                        }),
+                                    },
+                                    VertexProperty {
+                                        id: GID::Int64(18),
+                                        value: Box::new(GValue::String("kaiserslautern".into())),
+                                        vertex: Some(GID::Int32(9)),
+                                        label: "location".into(),
+                                        properties: Some({
+                                            let mut tmp = HashMap::new();
+                                            tmp.insert("startTime".into(), GValue::Int32(2005));
+                                            tmp.insert("endTime".into(), GValue::Int32(2009));
+                                            tmp
+                                        }),
+                                    },
+                                    VertexProperty {
+                                        id: GID::Int64(19),
+                                        value: Box::new(GValue::String("aachen".into())),
+                                        vertex: Some(GID::Int32(9)),
+                                        label: "location".into(),
+                                        properties: Some({
+                                            let mut tmp = HashMap::new();
+                                            tmp.insert("startTime".into(), GValue::Int32(2009));
+                                            tmp
+                                        }),
+                                    },
+                                ],
+                            );
+                            tmp
+                        },
+                    },
+                    Vertex {
+                        id: GID::Int32(10),
+                        label: "software".into(),
+                        properties: {
+                            let mut tmp = HashMap::new();
+                            tmp.insert(
+                                "name".into(),
+                                vec![VertexProperty {
+                                    id: GID::Int64(4),
+                                    value: Box::new(GValue::String("gremlin".into())),
+                                    vertex: Some(GID::Int32(10)),
+                                    label: "name".into(),
+                                    properties: None,
+                                }],
+                            );
+                            tmp
+                        },
+                    },
+                    Vertex {
+                        id: GID::Int32(11),
+                        label: "software".into(),
+                        properties: {
+                            let mut tmp = HashMap::new();
+                            tmp.insert(
+                                "name".into(),
+                                vec![VertexProperty {
+                                    id: GID::Int64(5),
+                                    value: Box::new(GValue::String("tinkergraph".into())),
+                                    vertex: Some(GID::Int32(11)),
+                                    label: "name".into(),
+                                    properties: None,
+                                }],
+                            );
+                            tmp
+                        },
+                    },
+                ],
+                edges: vec![
+                    Edge {
+                        id: GID::Int32(13),
+                        label: "develops".to_string(),
+                        in_v: Vertex {
+                            id: GID::Int32(10),
+                            label: "software".into(),
+                            properties: Default::default(),
+                        },
+                        out_v: Vertex {
+                            id: GID::Int32(1),
+                            label: "person".into(),
+                            properties: Default::default(),
+                        },
+                        properties: [("since".into(), Box::new(GValue::Int32(2009))),].into(),
+                    },
+                    Edge {
+                        id: GID::Int32(14),
+                        label: "develops".to_string(),
+                        in_v: Vertex {
+                            id: GID::Int32(11),
+                            label: "software".into(),
+                            properties: Default::default(),
+                        },
+                        out_v: Vertex {
+                            id: GID::Int32(1),
+                            label: "person".into(),
+                            properties: Default::default(),
+                        },
+                        properties: [("since".into(), Box::new(GValue::Int32(2010))),].into(),
+                    },
+                    Edge {
+                        id: GID::Int32(15),
+                        label: "uses".to_string(),
+                        in_v: Vertex {
+                            id: GID::Int32(10),
+                            label: "software".into(),
+                            properties: Default::default(),
+                        },
+                        out_v: Vertex {
+                            id: GID::Int32(1),
+                            label: "person".into(),
+                            properties: Default::default(),
+                        },
+                        properties: [("skill".into(), Box::new(GValue::Int32(4))),].into(),
+                    },
+                    Edge {
+                        id: GID::Int32(16),
+                        label: "uses".to_string(),
+                        in_v: Vertex {
+                            id: GID::Int32(11),
+                            label: "software".into(),
+                            properties: Default::default(),
+                        },
+                        out_v: Vertex {
+                            id: GID::Int32(1),
+                            label: "person".into(),
+                            properties: Default::default(),
+                        },
+                        properties: [("skill".into(), Box::new(GValue::Int32(5))),].into(),
+                    },
+                    Edge {
+                        id: GID::Int32(17),
+                        label: "develops".into(),
+                        in_v: Vertex {
+                            id: GID::Int32(10),
+                            label: "software".into(),
+                            properties: Default::default(),
+                        },
+                        out_v: Vertex {
+                            id: GID::Int32(7),
+                            label: "person".into(),
+                            properties: Default::default(),
+                        },
+                        properties: [("since".into(), Box::new(GValue::Int32(2010))),].into(),
+                    },
+                    Edge {
+                        id: GID::Int32(18),
+                        label: "develops".into(),
+                        in_v: Vertex {
+                            id: GID::Int32(11),
+                            label: "software".into(),
+                            properties: Default::default(),
+                        },
+                        out_v: Vertex {
+                            id: GID::Int32(7),
+                            label: "person".into(),
+                            properties: Default::default(),
+                        },
+                        properties: [("since".into(), Box::new(GValue::Int32(2011))),].into(),
+                    },
+                    Edge {
+                        id: GID::Int32(19),
+                        label: "uses".into(),
+                        in_v: Vertex {
+                            id: GID::Int32(10),
+                            label: "software".into(),
+                            properties: Default::default(),
+                        },
+                        out_v: Vertex {
+                            id: GID::Int32(7),
+                            label: "person".into(),
+                            properties: Default::default(),
+                        },
+                        properties: [("skill".into(), Box::new(GValue::Int32(5))),].into(),
+                    },
+                    Edge {
+                        id: GID::Int32(20),
+                        label: "uses".into(),
+                        in_v: Vertex {
+                            id: GID::Int32(11),
+                            label: "software".into(),
+                            properties: Default::default(),
+                        },
+                        out_v: Vertex {
+                            id: GID::Int32(7),
+                            label: "person".into(),
+                            properties: Default::default(),
+                        },
+                        properties: [("skill".into(), Box::new(GValue::Int32(4))),].into(),
+                    },
+                    Edge {
+                        id: GID::Int32(21),
+                        label: "develops".into(),
+                        in_v: Vertex {
+                            id: GID::Int32(10),
+                            label: "software".into(),
+                            properties: Default::default(),
+                        },
+                        out_v: Vertex {
+                            id: GID::Int32(8),
+                            label: "person".into(),
+                            properties: Default::default(),
+                        },
+                        properties: [("since".into(), Box::new(GValue::Int32(2012))),].into(),
+                    },
+                    Edge {
+                        id: GID::Int32(22),
+                        label: "uses".into(),
+                        in_v: Vertex {
+                            id: GID::Int32(10),
+                            label: "software".into(),
+                            properties: Default::default(),
+                        },
+                        out_v: Vertex {
+                            id: GID::Int32(8),
+                            label: "person".into(),
+                            properties: Default::default(),
+                        },
+                        properties: [("skill".into(), Box::new(GValue::Int32(3))),].into(),
+                    },
+                    Edge {
+                        id: GID::Int32(23),
+                        label: "uses".into(),
+                        in_v: Vertex {
+                            id: GID::Int32(11),
+                            label: "software".into(),
+                            properties: Default::default(),
+                        },
+                        out_v: Vertex {
+                            id: GID::Int32(8),
+                            label: "person".into(),
+                            properties: Default::default(),
+                        },
+                        properties: [("skill".into(), Box::new(GValue::Int32(3))),].into(),
+                    },
+                    Edge {
+                        id: GID::Int32(24),
+                        label: "uses".into(),
+                        in_v: Vertex {
+                            id: GID::Int32(10),
+                            label: "software".into(),
+                            properties: Default::default(),
+                        },
+                        out_v: Vertex {
+                            id: GID::Int32(9),
+                            label: "person".into(),
+                            properties: Default::default(),
+                        },
+                        properties: [("skill".into(), Box::new(GValue::Int32(5))),].into(),
+                    },
+                    Edge {
+                        id: GID::Int32(25),
+                        label: "uses".into(),
+                        in_v: Vertex {
+                            id: GID::Int32(11),
+                            label: "software".into(),
+                            properties: Default::default(),
+                        },
+                        out_v: Vertex {
+                            id: GID::Int32(9),
+                            label: "person".into(),
+                            properties: Default::default(),
+                        },
+                        properties: [("skill".into(), Box::new(GValue::Int32(3))),].into(),
+                    },
+                    Edge {
+                        id: GID::Int32(26),
+                        label: "traverses".into(),
+                        in_v: Vertex {
+                            id: GID::Int32(11),
+                            label: "software".into(),
+                            properties: Default::default(),
+                        },
+                        out_v: Vertex {
+                            id: GID::Int32(10),
+                            label: "software".into(),
+                            properties: Default::default(),
+                        },
+                        properties: Default::default(),
+                    },
+                ],
+            }),
         }
     );
     test!(

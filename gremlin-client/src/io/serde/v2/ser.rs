@@ -27,7 +27,7 @@ impl GraphSONSerializer for V2 {
             GValue::Path(_) => path::<Self>(value),
             GValue::Property(_) => property::<Self>(value),
             GValue::StarGraph(_) => star_graph::<Self>(value),
-            // GValue::TinkerGraph(_) => todo!("v2::tinkergraph"),
+            GValue::TinkerGraph(_) => tinker_graph::<Self>(value),
             GValue::Tree(_) => tree::<Self>(value),
             GValue::Vertex(_) => vertex::<Self>(value),
             GValue::VertexProperty(_) => vertex_property::<Self>(value),
@@ -385,6 +385,32 @@ pub fn star_graph<S: GraphSONSerializer>(value: &GValue) -> GremlinResult<Value>
     let binding = GValue::Vertex(star.into());
     Ok(json!({
         "starVertex": vertex::<S>(&binding)?
+    }))
+}
+
+pub fn tinker_graph<S: GraphSONSerializer>(value: &GValue) -> GremlinResult<Value> {
+    let tinker = get_value!(value, GValue::TinkerGraph)?;
+    let vertices = tinker
+        .vertices
+        .iter()
+        .map(Clone::clone)
+        .map(GValue::from)
+        .map(|gv| vertex::<S>(&gv))
+        .collect::<GremlinResult<Vec<Value>>>()?;
+    let edges = tinker
+        .edges
+        .iter()
+        .map(Clone::clone)
+        .map(GValue::from)
+        .map(|gv| edge::<S>(&gv))
+        .collect::<GremlinResult<Vec<Value>>>()?;
+
+    Ok(json!({
+        "@type": TINKER_GRAPH,
+        "@value": {
+            "vertices": vertices,
+            "edges": edges,
+        }
     }))
 }
 
