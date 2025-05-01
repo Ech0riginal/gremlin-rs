@@ -28,44 +28,41 @@ impl GraphSONDeserializer for V2 {
                     match _type {
                         Value::String(tyype) => match tyype.as_str() {
                             CLASS => class::<Self>(inner_value),
-                            types::core::INT => de::g32::<Self>(inner_value),
-                            types::core::LONG => de::g64::<Self>(inner_value),
-                            types::core::FLOAT => de::float32::<Self>(inner_value),
-                            types::core::DOUBLE => de::float64::<Self>(inner_value),
-                            // types::core::STRING => de::string(value),
-                            types::core::DATE => de::date::<Self>(inner_value),
-                            types::core::TIMESTAMP => de::timestamp::<Self>(inner_value),
-                            types::core::UUID => de::uuid::<Self>(inner_value),
-                            types::structure::EDGE => de::edge::<Self>(inner_value),
-                            types::structure::PATH => de::path::<Self>(inner_value),
-                            types::structure::PROPERTY => de::property::<Self>(inner_value),
-                            types::structure::STAR_GRAPH => todo!("support"),
-                            types::structure::TINKER_GRAPH => todo!("support"),
-                            types::structure::TREE => todo!("support"),
-                            types::structure::VERTEX => de::vertex::<Self>(inner_value),
-                            types::structure::VERTEX_PROPERTY => {
-                                de::vertex_property::<Self>(inner_value)
-                            }
-                            types::process::BARRIER => todo!("support"),
-                            types::process::BINDING => todo!("support"),
-                            types::process::BYTECODE => todo!("support"),
-                            types::process::CARDINALITY => todo!("support"),
-                            types::process::COLUMN => todo!("support"),
-                            types::process::DIRECTION => de::direction(inner_value),
-                            types::process::DT => todo!("support"),
-                            types::process::LAMBDA => todo!("support"),
-                            types::process::MERGE => todo!("support"),
-                            types::process::METRICS => todo!("support"),
-                            types::process::OPERATOR => todo!("support"),
-                            types::process::ORDER => todo!("support"),
-                            types::process::P => todo!("support"),
-                            types::process::PICK => todo!("support"),
-                            types::process::POP => todo!("support"),
-                            types::process::SCOPE => todo!("support"),
-                            types::process::T => de::token(inner_value),
-                            types::process::TEXT_P => todo!("support"),
-                            types::process::TRAVERSAL_METRICS => de::metrics::<Self>(inner_value),
-                            types::process::TRAVERSER => de::traverser::<Self>(inner_value),
+                            INT => g32::<Self>(inner_value),
+                            LONG => g64::<Self>(inner_value),
+                            FLOAT => float32::<Self>(inner_value),
+                            DOUBLE => float64::<Self>(inner_value),
+                            DATE => date::<Self>(inner_value),
+                            TIMESTAMP => timestamp::<Self>(inner_value),
+                            UUID => uuid::<Self>(inner_value),
+                            EDGE => edge::<Self>(inner_value),
+                            PATH => path::<Self>(inner_value),
+                            PROPERTY => property::<Self>(inner_value),
+                            STAR_GRAPH => todo!("support"),
+                            TINKER_GRAPH => todo!("support"),
+                            TREE => todo!("support"),
+                            VERTEX => vertex::<Self>(inner_value),
+                            VERTEX_PROPERTY => vertex_property::<Self>(inner_value),
+                            BARRIER => todo!("support"),
+                            BINDING => todo!("support"),
+                            BYTECODE => todo!("support"),
+                            CARDINALITY => todo!("support"),
+                            COLUMN => todo!("support"),
+                            DIRECTION => direction(inner_value),
+                            DT => todo!("support"),
+                            LAMBDA => todo!("support"),
+                            MERGE => todo!("support"),
+                            METRICS => todo!("support"),
+                            OPERATOR => todo!("support"),
+                            ORDER => todo!("support"),
+                            P => todo!("support"),
+                            PICK => todo!("support"),
+                            POP => todo!("support"),
+                            SCOPE => todo!("support"),
+                            T => token(inner_value),
+                            TEXT_P => todo!("support"),
+                            TRAVERSAL_METRICS => metrics::<Self>(inner_value),
+                            TRAVERSER => traverser::<Self>(inner_value),
 
                             type_tag => Err({
                                 let msg = format!("Unexpected type-tag `{type_tag}`");
@@ -108,6 +105,7 @@ pub(crate) fn id<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GID> {
     }
 }
 
+/// Class deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_class_2)
 pub(crate) fn class<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let class = get_value!(val, Value::String)?;
     Ok(GValue::Class(class.into()))
@@ -120,6 +118,7 @@ pub(crate) fn date<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue
     Ok(GValue::Date(datetime))
 }
 
+/// Timestamp deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_timestamp_2)
 pub(crate) fn timestamp<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let val = expect_i64!(val);
     let datetime = Utc.timestamp_millis_opt(val).unwrap();
@@ -241,22 +240,14 @@ pub(crate) fn edge<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue
     // let in_v_label = get_value!(&val["inVLabel"], Value::String)?.clone();
     let in_v_label = val
         .get("inVLabel")
-        .map(|label| {
-            get_value!(&val["inVLabel"], Value::String)
-                .map(Clone::clone)
-                .unwrap()
-        })
+        .map(|label| get_value!(label, Value::String).map(Clone::clone).unwrap())
         .unwrap_or("Unavailable".into());
 
     let out_v_id = id::<D>(&val["outV"])?;
-    // If we don't account for it we can't ser/de Property types.
+    // If we don't account for it, we can't ser/de Property types.
     let out_v_label = val
         .get("outVLabel")
-        .map(|label| {
-            get_value!(&val["inVLabel"], Value::String)
-                .map(Clone::clone)
-                .unwrap()
-        })
+        .map(|label| get_value!(label, Value::String).map(Clone::clone).unwrap())
         .unwrap_or("Unavailable".into());
     Ok(Edge::new(
         edge_id,
