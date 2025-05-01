@@ -23,6 +23,7 @@ mod t;
 mod text_p;
 mod token;
 mod traverser;
+mod tree;
 mod value;
 mod vertex;
 mod vertex_property;
@@ -51,6 +52,9 @@ pub use t::T;
 pub use text_p::TextP;
 pub use token::Token;
 pub use traverser::Traverser;
+pub use tree::Tree;
 pub use value::GValue;
 pub use vertex::Vertex;
 pub use vertex_property::{GProperty, VertexProperty};
+
+pub(crate) use tree::Branch;

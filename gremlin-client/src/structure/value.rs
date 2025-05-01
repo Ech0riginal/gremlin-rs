@@ -10,16 +10,19 @@ use crate::structure::{Pop, TextP, P, T};
 use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 pub type Date = chrono::DateTime<Utc>;
 use super::{Column, Direction, Merge};
+use crate::structure::tree::Tree;
 use chrono::{NaiveDate, NaiveDateTime, TimeZone, Utc};
 use geo_types::{Point, Polygon};
 use std::convert::TryInto;
 use std::fmt::Formatter;
 use std::hash::Hash;
+
 /// Represent possible values coming from the [Gremlin Server](http://tinkerpop.apache.org/docs/3.4.0/dev/io/)
 #[allow(clippy::large_enum_variant)]
 #[derive(PartialEq, Clone)]
 pub enum GValue {
     Null,
+    Tree(Tree),
     Vertex(Vertex),
     Edge(Edge),
     VertexProperty(VertexProperty),
@@ -116,8 +119,9 @@ impl std::fmt::Debug for GValue {
             GValue::Direction(_) => write!(f, "Direction"),
             GValue::Column(_) => write!(f, "Column"),
             GValue::BulkSet(_) => write!(f, "BulkSet"),
-            GValue::Class(_) => write!(f, "Class"),
+            GValue::Class(class) => write!(f, "{}", class),
             GValue::StarGraph(star) => write!(f, "{:?}", star),
+            GValue::Tree(tree) => write!(f, "{:?}", tree),
         }
     }
 }
