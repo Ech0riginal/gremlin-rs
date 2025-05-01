@@ -28,7 +28,12 @@ macro_rules! test {
                 #[test]
                 fn ok() {
                     let result = $engine::deserialize(&TEST_CASE.serial);
-                    assert!(result.is_ok(), "Deserialization failed");
+                    match result {
+                        Ok(_) => assert!(true),
+                        Err(e) => {
+                            assert!(false, "Deserialization failed: {:?}", e);
+                        }
+                    }
                 }
 
                 #[test]
@@ -50,7 +55,12 @@ macro_rules! test {
                 #[test]
                 fn ok() {
                     let result = $engine::serialize(&TEST_CASE.object);
-                    assert!(result.is_ok(), "Serialization failed");
+                    match result {
+                        Ok(_) => assert!(true),
+                        Err(e) => {
+                            assert!(false, "Serialization failed: {:?}", e);
+                        }
+                    }
                 }
 
                 #[test]

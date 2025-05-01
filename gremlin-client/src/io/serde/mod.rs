@@ -35,6 +35,11 @@ pub trait GraphSON:
 {
 }
 
+// Wow, I hate this
+pub(crate) struct Ctx {
+    in_property: bool,
+}
+
 pub trait GraphSONDeserializer {
     fn deserialize(value: &serde_json::Value) -> GremlinResult<GValue>;
 }
