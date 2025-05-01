@@ -1,4 +1,5 @@
 pub(self) use crate::io::serde::tests::*;
+pub(self) use crate::io::serde::v2::types::*;
 pub(self) use std::collections::HashMap;
 mod core {
     pub(self) use super::*;
@@ -12,7 +13,7 @@ mod core {
         class,
         V2,
         Test {
-            serial: json!({ "@type" : "g:Class", "@value" : "java.io.File"}),
+            serial: json!({ "@type" : CLASS, "@value" : "java.io.File"}),
             object: GValue::Class("java.io.File".into()),
         }
     );
@@ -20,15 +21,23 @@ mod core {
         date,
         V2,
         Test {
-            serial: json!({ "@type" : "g:Date", "@value" : 1481750076295i64 }),
+            serial: json!({ "@type" : DATE, "@value" : 1481750076295i64 }),
             object: GValue::Date(chrono::Utc.timestamp_millis_opt(1481750076295i64).unwrap()),
+        }
+    );
+    test!(
+        timestamp,
+        V2,
+        Test {
+            serial: json!({ "@type" : TIMESTAMP, "@value" : 1481750076295i64 }),
+            object: GValue::Timestamp(chrono::Utc.timestamp_millis_opt(1481750076295i64).unwrap()),
         }
     );
     test!(
         double,
         V2,
         Test {
-            serial: json!({ "@type" : "g:Double", "@value" : 100.0f64 }),
+            serial: json!({ "@type" : DOUBLE, "@value" : 100.0f64 }),
             object: GValue::Double(100.0),
         }
     );
@@ -36,7 +45,7 @@ mod core {
         float,
         V2,
         Test {
-            serial: json!({ "@type" : "g:Float", "@value" : 100.0f32 }),
+            serial: json!({ "@type" : FLOAT, "@value" : 100.0f32 }),
             object: GValue::Float(100.0),
         }
     );
@@ -44,7 +53,7 @@ mod core {
         integer,
         V2,
         Test {
-            serial: json!({ "@type" : "g:Int32", "@value" : 100i32 }),
+            serial: json!({ "@type" : INT, "@value" : 100i32 }),
             object: GValue::Int32(100),
         }
     );
@@ -52,23 +61,16 @@ mod core {
         long,
         V2,
         Test {
-            serial: json!({ "@type" : "g:Int64", "@value" : 100u64 }),
+            serial: json!({ "@type" : LONG, "@value" : 100u64 }),
             object: GValue::Int64(100),
         }
     );
-    test!(
-        timestamp,
-        V2,
-        Test {
-            serial: json!({ "@type" : "g:Timestamp", "@value" : 1481750076295i64 }),
-            object: GValue::Timestamp(chrono::Utc.timestamp_millis_opt(1481750076295i64).unwrap()),
-        }
-    );
+
     test!(
         uuid,
         V2,
         Test {
-            serial: json!({ "@type" : "g:UUID", "@value" : "41d2e28a-20a4-4ab0-b379-d810dede3786"}),
+            serial: json!({ "@type" : UUID, "@value" : "41d2e28a-20a4-4ab0-b379-d810dede3786"}),
             object: GValue::Uuid(Uuid::from_str("41d2e28a-20a4-4ab0-b379-d810dede3786").unwrap()),
         }
     );

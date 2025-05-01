@@ -21,12 +21,13 @@ impl GraphSONDeserializer for V2 {
                 let _obj_debug = format!("{:?}", obj);
                 if obj.contains_key("@type") {
                     let _type = obj.get("@type").unwrap();
-                    let value = &obj
+                    let value = obj
                         .get("@value")
                         .ok_or_else(|| GremlinError::Generic("Value missing".to_string()))?;
 
                     match _type {
                         Value::String(tyype) => match tyype.as_str() {
+                            CLASS => class::<Self>(value),
                             types::core::INT => de::g32::<Self>(value),
                             types::core::LONG => de::g64::<Self>(value),
                             types::core::FLOAT => de::float32::<Self>(value),
@@ -73,10 +74,16 @@ impl GraphSONDeserializer for V2 {
                         _ => Err(GremlinError::Generic("Malformed Object".to_string())),
                     }
                 } else {
-                    de::map::<Self>(value)
+                    map::<Self>(value)
                 }
             }
-            Value::Array(_) => list::<Self>(value),
+            Value::Array(values) => {
+                let collection = values
+                    .iter()
+                    .map(Self::deserialize)
+                    .collect::<Result<Vec<_>, GremlinError>>()?;
+                Ok(GValue::List(List(collection)))
+            }
             Value::Bool(_) => map::<Self>(value),
             Value::Null => Ok(GValue::Null),
         }
@@ -99,6 +106,11 @@ pub(crate) fn id<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GID> {
     }
 }
 
+pub(crate) fn class<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
+    let class = get_value!(val, Value::String)?;
+    Ok(GValue::Class(class.into()))
+}
+
 /// Date deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_date_2)
 pub(crate) fn date<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let val = expect_i64!(val);
@@ -109,7 +121,7 @@ pub(crate) fn date<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue
 pub(crate) fn timestamp<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let val = expect_i64!(val);
     let datetime = Utc.timestamp_millis_opt(val).unwrap();
-    Ok(GValue::Date(datetime))
+    Ok(GValue::Timestamp(datetime))
 }
 
 /// Integer deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_integer_2)

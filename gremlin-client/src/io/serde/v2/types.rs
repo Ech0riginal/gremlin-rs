@@ -1,5 +1,6 @@
 graphson_types! {
     core,
+    CLASS, "g:Class",
     INT, "g:Int32",
     LONG, "g:Int64",
     FLOAT, "g:Float",

@@ -12,51 +12,52 @@ impl GraphSONSerializer for V2 {
     fn serialize(value: &GValue) -> GremlinResult<Value> {
         match value {
             // Core
-            GValue::Int32(_) => ser::int32(value),
-            GValue::Int64(_) => ser::int64(value),
-            GValue::Float(_) => ser::float(value),
-            GValue::Double(_) => ser::double(value),
-            GValue::String(_) => ser::string(value),
-            GValue::Date(_) => ser::date(value),
-            GValue::Timestamp(_) => ser::timestamp(value),
-            GValue::Uuid(_) => ser::uuid(value),
+            GValue::Class(_) => class(value),
+            GValue::Int32(_) => int32(value),
+            GValue::Int64(_) => int64(value),
+            GValue::Float(_) => float(value),
+            GValue::Double(_) => double(value),
+            GValue::String(_) => string(value),
+            GValue::Date(_) => date(value),
+            GValue::Timestamp(_) => timestamp(value),
+            GValue::Uuid(_) => uuid(value),
             // Structure
-            GValue::Edge(_) => ser::edge::<Self>(value),
-            GValue::Path(_) => ser::path::<Self>(value),
-            GValue::Property(_) => ser::property::<Self>(value),
-            GValue::StarGraph(_) => ser::star_graph::<Self>(value),
+            GValue::Edge(_) => edge::<Self>(value),
+            GValue::Path(_) => path::<Self>(value),
+            GValue::Property(_) => property::<Self>(value),
+            GValue::StarGraph(_) => star_graph::<Self>(value),
             // GValue::TinkerGraph(_) => todo!("v2::tinkergraph"),
             // GValue::Tree(_) => todo!("v2::tree"),
-            GValue::Vertex(_) => ser::vertex::<Self>(value),
-            GValue::VertexProperty(_) => ser::vertex_property::<Self>(value),
+            GValue::Vertex(_) => vertex::<Self>(value),
+            GValue::VertexProperty(_) => vertex_property::<Self>(value),
             // Process
             // GValue::Barrier(_) => todo!("v2::barrier"),
             // GValue::Binding(_) => todo!("v2::binding"),
-            GValue::Bytecode(_) => ser::bytecode::<Self>(value),
-            GValue::Cardinality(_) => ser::cardinality(value),
-            GValue::Column(_) => ser::column(value),
-            GValue::Direction(_) => ser::direction(value),
+            GValue::Bytecode(_) => bytecode::<Self>(value),
+            GValue::Cardinality(_) => cardinality(value),
+            GValue::Column(_) => column(value),
+            GValue::Direction(_) => direction(value),
             // GValue::DT(_) => todo!("v2::dt"),
             // GValue::Lambda(_) => todo!("v2::lambda"),
-            GValue::Merge(_) => ser::merge(value),
+            GValue::Merge(_) => merge(value),
             // GValue::Metrics(_) => todo!("v2::metrics"),
             // GValue::Operator(_) => todo!("v2::operator"),
-            GValue::Order(_) => ser::order(value),
-            GValue::P(_) => ser::p::<Self>(value),
+            GValue::Order(_) => order(value),
+            GValue::P(_) => p::<Self>(value),
             // GValue::Pick(_) => todo!("v2::pick"),
-            GValue::Pop(_) => ser::pop(value),
-            GValue::Scope(_) => ser::scope(value),
-            GValue::T(_) => ser::t(value),
-            GValue::TextP(_) => ser::text_p::<Self>(value),
+            GValue::Pop(_) => pop(value),
+            GValue::Scope(_) => scope(value),
+            GValue::T(_) => t(value),
+            GValue::TextP(_) => text_p::<Self>(value),
             GValue::TraversalMetrics(_) => todo!("v2::traversalmetrics"),
             GValue::Traverser(_) => todo!("v2::traverser"),
 
-            // GValue::List(_) => ser::list::<Self>(value),
-            // GValue::Set(_) => ser::set::<Self>(value),
-            // GValue::P(_) => ser::p::<Self>(value),
+            // GValue::List(_) => list::<Self>(value),
+            // GValue::Set(_) => set::<Self>(value),
+            // GValue::P(_) => p::<Self>(value),
 
-            // GValue::Map(_) => ser::map::<Self>(value),
-            // GValue::Bool(_) => ser::bool(value),
+            // GValue::Map(_) => map::<Self>(value),
+            // GValue::Bool(_) => bool(value),
             GValue::Null => Ok(serde_json::Value::Null),
             value => panic!("Unsupported type {:?}", value),
         }
@@ -76,6 +77,14 @@ pub(crate) fn float(value: &GValue) -> GremlinResult<Value> {
     Ok(json!({
         "@type" : FLOAT,
         "@value" : float,
+    }))
+}
+
+pub(crate) fn class(value: &GValue) -> GremlinResult<Value> {
+    let class = get_value!(value, GValue::Class)?;
+    Ok(json!({
+        "@type" : CLASS,
+        "@value" : class,
     }))
 }
 
@@ -114,17 +123,20 @@ pub(crate) fn uuid(value: &GValue) -> GremlinResult<Value> {
 
 pub(crate) fn date(value: &GValue) -> GremlinResult<Value> {
     let date = get_value!(value, GValue::Date)?;
+    let millis = date.timestamp_millis();
+
     Ok(json!({
         "@type" : DATE,
-        "@value" : date.timestamp_millis()
+        "@value" : millis
     }))
 }
 
 pub(crate) fn timestamp(value: &GValue) -> GremlinResult<Value> {
     let date = get_value!(value, GValue::Timestamp)?;
+    let millis = date.timestamp_millis();
     Ok(json!({
         "@type" : TIMESTAMP,
-        "@value" : date.timestamp_millis()
+        "@value" : millis
     }))
 }
 
