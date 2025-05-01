@@ -59,11 +59,11 @@ impl FromGValue for GProperty {
 }
 #[derive(Debug, PartialEq, Clone)]
 pub struct VertexProperty {
-    pub(crate) label: String,
     pub(crate) id: GID,
     pub(crate) value: Box<GValue>,
     pub(crate) vertex: Option<GID>,
-    pub(crate) properties: HashMap<String, GValue>,
+    pub(crate) label: String,
+    pub(crate) properties: Option<HashMap<String, GValue>>,
 }
 
 impl VertexProperty {
@@ -75,9 +75,9 @@ impl VertexProperty {
     {
         VertexProperty {
             id: id.into(),
-            label: label.into(),
             value: Box::new(value.into()),
             vertex: None,
+            label: label.into(),
             properties: Default::default(),
         }
     }

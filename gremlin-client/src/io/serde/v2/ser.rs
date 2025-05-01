@@ -52,7 +52,7 @@ impl GraphSONSerializer for V2 {
             GValue::TraversalMetrics(_) => todo!("v2::traversalmetrics"),
             GValue::Traverser(_) => todo!("v2::traverser"),
 
-            // GValue::List(_) => list::<Self>(value),
+            GValue::List(_) => list::<Self>(value),
             // GValue::Set(_) => set::<Self>(value),
             // GValue::P(_) => p::<Self>(value),
 
@@ -147,10 +147,7 @@ pub(crate) fn list<S: GraphSONSerializer>(value: &GValue) -> GremlinResult<Value
         .map(|e| S::serialize(e))
         .collect::<GremlinResult<Vec<Value>>>()?;
 
-    Ok(json!({
-        "@type" : "g:List",
-        "@value" : elements,
-    }))
+    Ok(json!(elements))
 }
 
 pub(crate) fn set<S: GraphSONSerializer>(value: &GValue) -> GremlinResult<Value> {
@@ -221,7 +218,6 @@ pub(crate) fn bytecode<S: GraphSONSerializer>(value: &GValue) -> GremlinResult<V
 
 pub(crate) fn vertex<S: GraphSONSerializer>(value: &GValue) -> GremlinResult<Value> {
     let v = get_value!(value, GValue::Vertex)?;
-    let id = S::serialize(&v.id().to_gvalue())?;
     let properties = v
         .iter()
         .map(|(label, properties)| {
@@ -229,61 +225,57 @@ pub(crate) fn vertex<S: GraphSONSerializer>(value: &GValue) -> GremlinResult<Val
                 label.clone(),
                 properties
                     .into_iter()
-                    .map(|p| (*p).clone())
-                    .map(GValue::VertexProperty)
-                    .flat_map(|p| S::serialize(&p))
+                    .map(|vp| GValue::VertexProperty(vp.clone()))
+                    .flat_map(|v| vertex_property::<S>(&v))
                     .collect::<Vec<_>>(),
             )
         })
         .collect::<HashMap<String, Vec<Value>>>();
+    let mut root = HashMap::<&'static str, Value>::new();
+    let mut value = HashMap::<&'static str, Value>::new();
 
-    let value = if properties.is_empty() {
-        json!({
-            "@type" : VERTEX,
-            "@value" : {
-                "id" :  id,
-                "label": v.label(),
-            }
-        })
-    } else {
-        json!({
-            "@type" : VERTEX,
-            "@value" : {
-                "id" :  id,
-                "label": v.label(),
-                "properties": properties
-            }
-        })
-    };
+    value.insert("id", S::serialize(&v.id().to_gvalue())?);
+    value.insert("label", serde_json::to_value(v.label())?);
+    if !properties.is_empty() {
+        value.insert("properties", serde_json::to_value(&properties)?);
+    }
+    root.insert("@type", Value::String(VERTEX.into()));
+    root.insert("@value", serde_json::to_value(&value)?);
 
-    Ok(value)
+    let json = json!(root);
+    let _debug_info = serde_json::to_string_pretty(&json)?;
+
+    Ok(json)
 }
 
 pub fn vertex_property<S: GraphSONSerializer>(value: &GValue) -> GremlinResult<Value> {
     let property = get_value!(value, GValue::VertexProperty)?;
+    let mut root = HashMap::<&'static str, Value>::new();
+    let mut value = HashMap::<&'static str, Value>::new();
 
-    let blob = if let Some(vertex_id) = &property.vertex {
-        json!({
-            "@type" : VERTEX_PROPERTY,
-            "@value" : {
-                "id" : S::serialize(&property.id.to_gvalue())?,
-                "value" : S::serialize(&property.value)?,
-                "label" : S::serialize(&property.label.to_gvalue())?,
-            },
-            "vertex" : S::serialize(&vertex_id.to_gvalue())?,
-        })
-    } else {
-        json!({
-            "@type" : VERTEX_PROPERTY,
-            "@value" : {
-                "id" : S::serialize(&property.id.to_gvalue())?,
-                "value" : S::serialize(&property.value)?,
-                "label" : S::serialize(&property.label.to_gvalue())?,
-            }
-        })
-    };
+    value.insert("id", S::serialize(&property.id().to_gvalue())?);
+    value.insert("value", S::serialize(&*property.value)?);
+    value.insert("label", serde_json::to_value(&property.label)?);
+    if let Some(id) = &property.vertex {
+        value.insert("vertex", S::serialize(&id.to_gvalue())?);
+    }
+    if let Some(properties) = &property.properties {
+        let map = properties
+            .iter()
+            .map(|(k, v)| (k, S::serialize(v)))
+            .filter(|(_, v)| v.is_ok())
+            .map(|(k, v)| (k, v.unwrap()))
+            .collect::<HashMap<&String, Value>>();
+        value.insert("properties", serde_json::to_value(&map)?);
+    }
 
-    Ok(blob)
+    root.insert("@type", Value::String(VERTEX_PROPERTY.into()));
+    root.insert("@value", serde_json::to_value(&value)?);
+
+    let json = json!(root);
+    let _debug_info = serde_json::to_string_pretty(&json)?;
+
+    Ok(json)
 }
 
 pub(crate) fn edge<S: GraphSONSerializer>(value: &GValue) -> GremlinResult<Value> {

@@ -15,6 +15,10 @@ mod {name} {{
 
 """
 
+def static_name(name: str) -> str:
+    return name.upper().replace(' ', '_')
+
+
 if __name__ == '__main__':
     from bs4 import BeautifulSoup
     from json import loads
@@ -23,7 +27,6 @@ if __name__ == '__main__':
 
     modules = []
     engines = {
-        '1d0': 'V2',
         '2d0': 'V2',
         '3d0': 'V3',
     }
@@ -32,11 +35,11 @@ if __name__ == '__main__':
     soup = BeautifulSoup(html.content, "html.parser")
     versions = soup.find_all('div', attrs={'class': 'sect1'})[:-1]
 
-    def static_name(name: str) -> str:
-        return name.upper().replace(' ', '_')
-
     for version in versions:
         version_name = list(filter(lambda el: el.text != '\n', version.children))[0].attrs.get('id').replace('graphson-', '')
+        if version_name == '1d0':
+            continue
+
         mod = module(f'v_{version_name}')
         sections = version.find_all('div', attrs={'class': 'sect2'})
         seen = []
@@ -69,8 +72,7 @@ if __name__ == '__main__':
         for component_name in seen:
             component_name = static_name(component_name)
             engine_name = engines[version_name]
-            test_name = f'v{version_name}_{component_name.lower()}'
-            tests.append(f'    super::test!({test_name}, {engine_name}, {component_name});')
+            tests.append(f'    super::test!({component_name.lower()}, {engine_name}, {component_name});')
         mod += '\n'.join(tests)
         mod += '\n'
         mod += '\n'.join(test_cases)
