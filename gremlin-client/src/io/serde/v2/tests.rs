@@ -270,7 +270,7 @@ mod structure {
                     tmp.insert(
                         "name".into(),
                         vec![VertexProperty {
-                            id: GID::Int32(0),
+                            id: GID::Int64(0),
                             label: "name".into(),
                             value: Box::new(GValue::String("marko".into())),
                             vertex: Some(GID::Int32(1)),
@@ -281,16 +281,9 @@ mod structure {
                         "location".into(),
                         vec![
                             VertexProperty {
-                                id: GID::Int32(6),
+                                id: GID::Int64(6),
                                 value: Box::new(GValue::String("san diego".into())),
                                 label: "location".into(),
-                                vertex: Some(GID::Int32(1)),
-                                properties: Default::default(),
-                            },
-                            VertexProperty {
-                                id: GID::Int32(6),
-                                label: "location".into(),
-                                value: Box::new(GValue::String("santa cruz".into())),
                                 vertex: Some(GID::Int32(1)),
                                 properties: Some({
                                     let mut tmp2 = HashMap::new();
@@ -300,7 +293,19 @@ mod structure {
                                 }),
                             },
                             VertexProperty {
-                                id: GID::Int32(8),
+                                id: GID::Int64(7),
+                                label: "location".into(),
+                                value: Box::new(GValue::String("santa cruz".into())),
+                                vertex: Some(GID::Int32(1)),
+                                properties: Some({
+                                    let mut tmp2 = HashMap::new();
+                                    tmp2.insert("startTime".into(), GValue::Int32(2001));
+                                    tmp2.insert("endTime".into(), GValue::Int32(2004));
+                                    tmp2
+                                }),
+                            },
+                            VertexProperty {
+                                id: GID::Int64(8),
                                 label: "location".into(),
                                 value: Box::new(GValue::String("brussels".into())),
                                 vertex: Some(GID::Int32(1)),
@@ -312,7 +317,7 @@ mod structure {
                                 }),
                             },
                             VertexProperty {
-                                id: GID::Int32(9),
+                                id: GID::Int64(9),
                                 label: "location".into(),
                                 value: Box::new(GValue::String("santa fe".into())),
                                 vertex: Some(GID::Int32(1)),
@@ -329,6 +334,7 @@ mod structure {
             }),
         }
     );
+    // I ain't doin all that right now
     test!(
         tinkergraph,
         V2,
