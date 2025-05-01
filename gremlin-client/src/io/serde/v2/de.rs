@@ -98,7 +98,7 @@ fn funky_deserializer<D: GraphSONDeserializer>(value: &Value) -> GremlinResult<G
 }
 
 /// Deserialize a JSON value to a GID
-pub(crate) fn id<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GID> {
+pub fn id<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GID> {
     match D::deserialize(val) {
         Ok(result) => match result {
             GValue::String(d) => Ok(GID::String(d)),
@@ -114,39 +114,39 @@ pub(crate) fn id<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GID> {
 }
 
 /// Class deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_class_2)
-pub(crate) fn class<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
+pub fn class<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let class = get_value!(val, Value::String)?;
     Ok(GValue::Class(class.into()))
 }
 
 /// Date deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_date_2)
-pub(crate) fn date<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
+pub fn date<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let val = expect_i64!(val);
     let datetime = Utc.timestamp_millis_opt(val).unwrap();
     Ok(GValue::Date(datetime))
 }
 
 /// Timestamp deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_timestamp_2)
-pub(crate) fn timestamp<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
+pub fn timestamp<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let val = expect_i64!(val);
     let datetime = Utc.timestamp_millis_opt(val).unwrap();
     Ok(GValue::Timestamp(datetime))
 }
 
 /// Integer deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_integer_2)
-pub(crate) fn g32<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
+pub fn g32<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let val = expect_i32!(val);
     Ok(GValue::Int32(val))
 }
 
 /// Long deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_long_2)
-pub(crate) fn g64<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
+pub fn g64<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let val = expect_i64!(val);
     Ok(GValue::Int64(val))
 }
 
 /// String deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_long_2)
-pub(crate) fn string<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
+pub fn string<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let val = match val {
         Value::String(str) => str.to_string(),
         _ => panic!("Invalid JSON"),
@@ -156,25 +156,25 @@ pub(crate) fn string<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GVal
 }
 
 /// UUID deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_uuid_2)
-pub(crate) fn uuid<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
+pub fn uuid<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let val = get_value!(val, Value::String)?;
     let uuid = uuid::Uuid::parse_str(&val)?;
     Ok(GValue::Uuid(uuid))
 }
 
 /// Float deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_float_2)
-pub(crate) fn float32<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
+pub fn float32<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let val = expect_float!(val);
     Ok(GValue::Float(val))
 }
 /// Double deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_double_2)
-pub(crate) fn float64<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
+pub fn float64<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let val = expect_double!(val);
     Ok(GValue::Double(val))
 }
 
 /// List deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_list)
-pub(crate) fn list<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
+pub fn list<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let val = get_value!(val, Value::Array)?;
     let mut elements = Vec::with_capacity(val.len());
     for item in val {
@@ -186,7 +186,7 @@ pub(crate) fn list<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue
 }
 
 /// Set deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_set)
-pub(crate) fn set<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
+pub fn set<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     match list::<D>(val)? {
         GValue::List(List(values)) => Ok(GValue::Set(values.into())),
         _ => panic!("Infallible"),
@@ -194,7 +194,7 @@ pub(crate) fn set<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue>
 }
 
 /// Map deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_map)
-pub(crate) fn map<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
+pub fn map<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let val = get_value!(val, Value::Object)?;
     let mut map = HashMap::new();
     for (k, v) in val {
@@ -204,14 +204,14 @@ pub(crate) fn map<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue>
 }
 
 /// Token deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_t_2)
-pub(crate) fn token(val: &Value) -> GremlinResult<GValue> {
+pub fn token(val: &Value) -> GremlinResult<GValue> {
     let val = get_value!(val, Value::String)?;
     let token = Token::new(val.clone());
     Ok(GValue::Token(token))
 }
 
 /// https://tinkerpop.apache.org/docs/current/dev/io/#_direction
-pub(crate) fn direction(val: &Value) -> GremlinResult<GValue> {
+pub fn direction(val: &Value) -> GremlinResult<GValue> {
     let val = get_value!(val, Value::String)?;
     match val.as_str() {
         "OUT" => Ok(GValue::Direction(crate::structure::Direction::Out)),
@@ -252,7 +252,8 @@ fn tree_branch<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<Branch> {
     })
 }
 
-fn star_graph<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
+/// Vertex deserializer [docs](https://tinkerpop.apache.org/docs/current/dev/io/#_stargraph)
+pub fn star_graph<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let value = val
         .get("starVertex")
         .ok_or(GremlinError::Json("Malformed StarGraph".into()))?;
@@ -261,8 +262,8 @@ fn star_graph<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     Ok(GValue::StarGraph(yikes))
 }
 
-/// Vertex deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_vertex_3)
-pub(crate) fn vertex<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
+/// Vertex deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_vertex_2)
+pub fn vertex<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let label = val
         .get("label")
         .map(|f| get_value!(f, Value::String).map(Clone::clone))
@@ -273,8 +274,8 @@ pub(crate) fn vertex<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GVal
     Ok(Vertex::new(id, label, vertex_properties::<D>(&val["properties"])?).into())
 }
 
-/// Edge deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_edge_3)
-pub(crate) fn edge<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
+/// Edge deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_edge_2)
+pub fn edge<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let label = val
         .get("label")
         .map(|f| get_value!(f, Value::String).map(Clone::clone))
@@ -308,8 +309,8 @@ pub(crate) fn edge<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue
     .into())
 }
 
-/// Path deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_path_3)
-pub(crate) fn path<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
+/// Path deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_path_2)
+pub fn path<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let labels = D::deserialize(&val["labels"])?;
 
     let objects = D::deserialize(&val["objects"])?;
@@ -318,7 +319,7 @@ pub(crate) fn path<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue
 }
 
 /// Traversal Metrics deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_traversalmetrics)
-pub(crate) fn traversal_metrics<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
+pub fn traversal_metrics<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let mut metrics = D::deserialize(val)?.take::<Map>()?;
 
     let duration = remove_or_else(&mut metrics, "dur", TRAVERSAL_METRICS)?.take::<f64>()?;
@@ -335,7 +336,7 @@ pub(crate) fn traversal_metrics<D: GraphSONDeserializer>(val: &Value) -> Gremlin
 }
 
 /// Metrics deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_metrics)
-pub(crate) fn metrics<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
+pub fn metrics<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let mut metric = D::deserialize(val)?.take::<Map>()?;
 
     let duration = remove_or_else(&mut metric, "dur", METRICS)?.take::<f64>()?;
@@ -374,7 +375,7 @@ pub(crate) fn metrics<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GVa
     .into())
 }
 
-pub(crate) fn explain<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
+pub fn explain<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let mut explain = D::deserialize(val)?.take::<Map>()?;
 
     let original = remove_or_else(&mut explain, "original", TRAVERSAL_EXPLANATION)?
@@ -406,8 +407,8 @@ pub(crate) fn explain<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GVa
     Ok(TraversalExplanation::new(original, finals, intermediate).into())
 }
 
-/// Vertex Property deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_vertexproperty_3)
-pub(crate) fn vertex_property<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
+/// Vertex Property deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_vertexproperty_2)
+pub fn vertex_property<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let mut property = VertexProperty {
         id: id::<D>(&val["id"])?,
         value: Box::new(D::deserialize(&val["value"])?),
@@ -437,8 +438,8 @@ pub(crate) fn vertex_property<D: GraphSONDeserializer>(val: &Value) -> GremlinRe
     Ok(property.into())
 }
 
-/// Property deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_property_3)
-pub(crate) fn property<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
+/// Property deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_property_2)
+pub fn property<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let key = val
         .get("key")
         .map(|v| get_value!(v, Value::String).map(Clone::clone))
@@ -491,13 +492,13 @@ pub fn tinker_graph<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValu
 }
 
 /// Traverser deserializer [docs](http://tinkerpop.apache.org/docs/3.4.1/dev/io/#_traverser_2)
-pub(crate) fn traverser<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
+pub fn traverser<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let bulk = D::deserialize(&val["bulk"])?.take::<i64>()?;
     let v = D::deserialize(&val["value"])?;
     Ok(Traverser::new(bulk, v).into())
 }
 
-pub(crate) fn vertex_properties<D: GraphSONDeserializer>(
+pub fn vertex_properties<D: GraphSONDeserializer>(
     properties: &Value,
 ) -> GremlinResult<HashMap<String, Vec<VertexProperty>>> {
     match properties {
@@ -531,7 +532,7 @@ pub(crate) fn vertex_properties<D: GraphSONDeserializer>(
     }
 }
 
-pub(crate) fn map_intermediate(mut m: Map) -> GremlinResult<IntermediateRepr> {
+pub fn map_intermediate(mut m: Map) -> GremlinResult<IntermediateRepr> {
     let traversal = remove_or_else(&mut m, "traversal", TRAVERSAL_EXPLANATION)?
         .take::<List>()?
         .take()
@@ -547,11 +548,11 @@ pub(crate) fn map_intermediate(mut m: Map) -> GremlinResult<IntermediateRepr> {
     Ok(IntermediateRepr::new(traversal, strategy, category))
 }
 
-pub(crate) fn remove_or_else(map: &mut Map, field: &str, owner: &str) -> GremlinResult<GValue> {
+pub fn remove_or_else(map: &mut Map, field: &str, owner: &str) -> GremlinResult<GValue> {
     remove(map, field, owner)
         .ok_or_else(|| GremlinError::Json(format!("Field {} not found in {}", field, owner)))
 }
 
-pub(crate) fn remove(map: &mut Map, field: &str, _owner: &str) -> Option<GValue> {
+pub fn remove(map: &mut Map, field: &str, _owner: &str) -> Option<GValue> {
     map.remove(field)
 }
