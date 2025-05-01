@@ -365,13 +365,24 @@ pub(crate) fn vertex_property<D: GraphSONDeserializer>(val: &Value) -> GremlinRe
 
 /// Property deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_property_3)
 pub(crate) fn property<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
-    let label = val
+    let key = val
         .get("key")
-        .map(|f| get_value!(f, Value::String).map(Clone::clone))
-        .unwrap_or_else(|| Ok(String::from("property")))?;
-    let v = D::deserialize(&val["value"])?;
+        .map(|v| get_value!(v, Value::String).map(Clone::clone))
+        .ok_or(GremlinError::Json("Missing Property 'key' key".into()))??;
+    let value = val
+        .get("value")
+        .map(|v| get_value!(v, Value::Object).map(|v| Value::Object(v.clone())))
+        .ok_or(GremlinError::Json("Missing Property 'value' key".into()))??;
+    let element = val
+        .get("value")
+        .map(|v| get_value!(v, Value::Object).map(|v| Value::Object(v.clone())))
+        .ok_or(GremlinError::Json("Missing Property 'element' key".into()))??;
 
-    Ok(Property::new(label, v).into())
+    Ok(GValue::Property(Property {
+        key: key,
+        value: Box::new(D::deserialize(&value)?),
+        element: Box::new(D::deserialize(&element)?),
+    }))
 }
 
 /// Traverser deserializer [docs](http://tinkerpop.apache.org/docs/3.4.1/dev/io/#_traverser_2)

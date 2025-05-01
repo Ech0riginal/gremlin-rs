@@ -291,7 +291,7 @@ pub(crate) fn edge<S: GraphSONSerializer>(value: &GValue) -> GremlinResult<Value
 
     let properties = e
         .iter()
-        .map(|(label, property)| (label, S::serialize(&GValue::Property(property.clone()))))
+        .map(|(label, property)| (label, S::serialize(&*property)))
         .filter(|(_, r)| r.is_ok())
         .map(|(p, r)| (p.clone(), r.unwrap()))
         .collect::<HashMap<String, Value>>();
@@ -356,19 +356,15 @@ pub(crate) fn path<S: GraphSONSerializer>(value: &GValue) -> GremlinResult<Value
 
 pub(crate) fn property<S: GraphSONSerializer>(value: &GValue) -> GremlinResult<Value> {
     let property = get_value!(value, GValue::Property)?;
-    let json = match &*property.element {
-        GValue::Null => json!({
-              "@type": PROPERTY,
-              "value": S::serialize(&property.value)?,
-        }),
-        gvalue => json!({
-              "@type": PROPERTY,
-              "value": S::serialize(&property.value)?,
-              "element": S::serialize(gvalue)?,
-        }),
-    };
 
-    Ok(json)
+    Ok(json!({
+        "@type": PROPERTY,
+        "@value": {
+            "key": property.key,
+            "value": S::serialize(&*property.value)?,
+            "element": S::serialize(&*property.element)?,
+        }
+    }))
 }
 
 pub(crate) fn star_graph<S: GraphSONSerializer>(value: &GValue) -> GremlinResult<Value> {

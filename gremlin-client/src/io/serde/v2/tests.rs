@@ -98,15 +98,7 @@ mod structure {
                     label: "person".into(),
                     properties: Default::default(),
                 },
-                properties: [(
-                    "since".into(),
-                    Property {
-                        label: "since".into(),
-                        value: Box::new(GValue::Int32(2009)),
-                        element: Box::new(GValue::Null),
-                    }
-                ),]
-                .into(),
+                properties: [("since".into(), Box::new(GValue::Int32(2009))),].into(),
             }),
         }
     );
@@ -132,7 +124,7 @@ mod structure {
         Test {
             serial: json!({ "@type" : "g:Property", "@value" : { "key" : "since", "value" : { "@type" : "g:Int32", "@value" : 2009 }, "element" : { "@type" : "g:Edge", "@value" : { "id" : { "@type" : "g:Int32", "@value" : 13 }, "label" : "develops", "outV" : { "@type" : "g:Int32", "@value" : 1 }, "inV" : { "@type" : "g:Int32", "@value" : 10 } } } }}),
             object: GValue::Property(Property {
-                label: "since".into(),
+                key: "since".into(),
                 value: Box::new(GValue::Int32(2009)),
                 element: Box::new(GValue::Edge(Edge {
                     id: GID::Int32(13),
