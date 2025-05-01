@@ -2,11 +2,7 @@ use crate::conversion::{BorrowFromGValue, FromGValue};
 use crate::prelude::{GremlinError, GremlinResult, ToGValue, GID};
 use crate::process::traversal::{Bytecode, Order, Scope, TraversalBuilder};
 use crate::structure::traverser::Traverser;
-use crate::structure::{
-    label::LabelType, Cardinality, Edge, GKey, IntermediateRepr, List, Map, Metric, Path, Property,
-    Set, StarGraph, Token, TraversalExplanation, TraversalMetrics, Vertex, VertexProperty,
-};
-use crate::structure::{Pop, TextP, P, T};
+use crate::structure::*;
 use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 pub type Date = chrono::DateTime<Utc>;
 use super::{Column, Direction, Merge};
@@ -23,6 +19,7 @@ use std::hash::Hash;
 pub enum GValue {
     Null,
     Tree(Tree),
+    TinkerGraph(TinkerGraph),
     Vertex(Vertex),
     Edge(Edge),
     VertexProperty(VertexProperty),
@@ -122,6 +119,7 @@ impl std::fmt::Debug for GValue {
             GValue::Class(class) => write!(f, "{}", class),
             GValue::StarGraph(star) => write!(f, "{:?}", star),
             GValue::Tree(tree) => write!(f, "{:?}", tree),
+            GValue::TinkerGraph(graph) => write!(f, "{:?}", graph),
         }
     }
 }

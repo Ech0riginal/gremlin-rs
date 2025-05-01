@@ -17,3 +17,13 @@ impl From<&StarGraph> for Vertex {
         }
     }
 }
+
+impl From<Vertex> for StarGraph {
+    fn from(value: Vertex) -> Self {
+        Self {
+            id: value.id.clone(),
+            label: value.label.clone(),
+            properties: value.properties.clone(),
+        }
+    }
+}
