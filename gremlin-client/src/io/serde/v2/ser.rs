@@ -277,45 +277,44 @@ pub fn vertex_property<S: GraphSONSerializer>(value: &GValue) -> GremlinResult<V
 
     Ok(json)
 }
-
 pub(crate) fn edge<S: GraphSONSerializer>(value: &GValue) -> GremlinResult<Value> {
-    let e = get_value!(value, GValue::Edge)?;
+    rly_edge::<S>(value, true)
+}
+pub(crate) fn dumbass_edge_in_property<S: GraphSONSerializer>(
+    value: &GValue,
+) -> GremlinResult<Value> {
+    rly_edge::<S>(value, false)
+}
+pub(crate) fn rly_edge<S: GraphSONSerializer>(
+    value: &GValue,
+    serialize_labels: bool,
+) -> GremlinResult<Value> {
+    let edge = get_value!(value, GValue::Edge)?;
 
-    let properties = e
-        .iter()
-        .map(|(label, property)| (label, S::serialize(&*property)))
-        .filter(|(_, r)| r.is_ok())
-        .map(|(p, r)| (p.clone(), r.unwrap()))
-        .collect::<HashMap<String, Value>>();
+    let mut value = HashMap::new();
+    value.insert("id", S::serialize(&edge.id().to_gvalue())?);
+    value.insert("label", S::serialize(&edge.label().to_gvalue())?);
+    if serialize_labels {
+        value.insert("inVLabel", S::serialize(&edge.in_v.label().to_gvalue())?);
+        value.insert("outVLabel", S::serialize(&edge.out_v.label().to_gvalue())?);
+    }
+    value.insert("inV", S::serialize(&edge.in_v.id().to_gvalue())?);
+    value.insert("outV", S::serialize(&edge.out_v.id().to_gvalue())?);
+    if !edge.properties.is_empty() {
+        let properties = edge
+            .properties
+            .iter()
+            .map(|(label, property)| (label, S::serialize(&**property)))
+            .filter(|(_, v)| v.is_ok())
+            .map(|(k, v)| (k, v.unwrap()))
+            .collect::<HashMap<&String, Value>>();
+        value.insert("properties", serde_json::to_value(&properties)?);
+    }
 
-    let value = if properties.is_empty() {
-        json!({
-            "@type" : EDGE,
-            "@value" : {
-                "id" :  S::serialize(&e.id().to_gvalue())?,
-                "label": S::serialize(&e.label().to_gvalue())?,
-                "inVLabel": S::serialize(&e.in_v.label().to_gvalue())?,
-                "outVLabel": S::serialize(&e.out_v.label().to_gvalue())?,
-                "inV": S::serialize(&e.in_v.id().to_gvalue())?,
-                "outV": S::serialize(&e.out_v.id().to_gvalue())?,
-            }
-        })
-    } else {
-        json!({
-            "@type" : EDGE,
-            "@value" : {
-                "id" :  S::serialize(&e.id().to_gvalue())?,
-                "label": S::serialize(&e.label().to_gvalue())?,
-                "inVLabel": S::serialize(&e.in_v.label().to_gvalue())?,
-                "outVLabel": S::serialize(&e.out_v.label().to_gvalue())?,
-                "inV": S::serialize(&e.in_v.id().to_gvalue())?,
-                "outV": S::serialize(&e.out_v.id().to_gvalue())?,
-                "properties": properties
-            }
-        })
-    };
-
-    Ok(value)
+    Ok(json!({
+        "@type": EDGE,
+        "@value": value
+    }))
 }
 
 pub(crate) fn map<S: GraphSONSerializer>(value: &GValue) -> GremlinResult<Value> {
@@ -354,7 +353,10 @@ pub(crate) fn property<S: GraphSONSerializer>(value: &GValue) -> GremlinResult<V
         "@value": {
             "key": property.key,
             "value": S::serialize(&*property.value)?,
-            "element": S::serialize(&*property.element)?,
+            "element": match &*property.element {
+                GValue::Edge(e) => dumbass_edge_in_property::<S>(&*property.element)?,
+                element => S::serialize(element)?,
+            }
         }
     }))
 }

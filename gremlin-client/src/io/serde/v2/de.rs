@@ -21,35 +21,37 @@ impl GraphSONDeserializer for V2 {
                 let _obj_debug = format!("{:?}", obj);
                 if obj.contains_key("@type") {
                     let _type = obj.get("@type").unwrap();
-                    let value = obj
+                    let inner_value = obj
                         .get("@value")
                         .ok_or_else(|| GremlinError::Generic("Value missing".to_string()))?;
 
                     match _type {
                         Value::String(tyype) => match tyype.as_str() {
-                            CLASS => class::<Self>(value),
-                            types::core::INT => de::g32::<Self>(value),
-                            types::core::LONG => de::g64::<Self>(value),
-                            types::core::FLOAT => de::float32::<Self>(value),
-                            types::core::DOUBLE => de::float64::<Self>(value),
+                            CLASS => class::<Self>(inner_value),
+                            types::core::INT => de::g32::<Self>(inner_value),
+                            types::core::LONG => de::g64::<Self>(inner_value),
+                            types::core::FLOAT => de::float32::<Self>(inner_value),
+                            types::core::DOUBLE => de::float64::<Self>(inner_value),
                             // types::core::STRING => de::string(value),
-                            types::core::DATE => de::date::<Self>(value),
-                            types::core::TIMESTAMP => de::timestamp::<Self>(value),
-                            types::core::UUID => de::uuid::<Self>(value),
-                            types::structure::EDGE => de::edge::<Self>(value),
-                            types::structure::PATH => de::path::<Self>(value),
-                            types::structure::PROPERTY => de::property::<Self>(value),
+                            types::core::DATE => de::date::<Self>(inner_value),
+                            types::core::TIMESTAMP => de::timestamp::<Self>(inner_value),
+                            types::core::UUID => de::uuid::<Self>(inner_value),
+                            types::structure::EDGE => de::edge::<Self>(inner_value),
+                            types::structure::PATH => de::path::<Self>(inner_value),
+                            types::structure::PROPERTY => de::property::<Self>(inner_value),
                             types::structure::STAR_GRAPH => todo!("support"),
                             types::structure::TINKER_GRAPH => todo!("support"),
                             types::structure::TREE => todo!("support"),
-                            types::structure::VERTEX => de::vertex::<Self>(value),
-                            types::structure::VERTEX_PROPERTY => de::vertex_property::<Self>(value),
+                            types::structure::VERTEX => de::vertex::<Self>(inner_value),
+                            types::structure::VERTEX_PROPERTY => {
+                                de::vertex_property::<Self>(inner_value)
+                            }
                             types::process::BARRIER => todo!("support"),
                             types::process::BINDING => todo!("support"),
                             types::process::BYTECODE => todo!("support"),
                             types::process::CARDINALITY => todo!("support"),
                             types::process::COLUMN => todo!("support"),
-                            types::process::DIRECTION => de::direction(value),
+                            types::process::DIRECTION => de::direction(inner_value),
                             types::process::DT => todo!("support"),
                             types::process::LAMBDA => todo!("support"),
                             types::process::MERGE => todo!("support"),
@@ -60,10 +62,10 @@ impl GraphSONDeserializer for V2 {
                             types::process::PICK => todo!("support"),
                             types::process::POP => todo!("support"),
                             types::process::SCOPE => todo!("support"),
-                            types::process::T => de::token(value),
+                            types::process::T => de::token(inner_value),
                             types::process::TEXT_P => todo!("support"),
-                            types::process::TRAVERSAL_METRICS => de::metrics::<Self>(value),
-                            types::process::TRAVERSER => de::traverser::<Self>(value),
+                            types::process::TRAVERSAL_METRICS => de::metrics::<Self>(inner_value),
+                            types::process::TRAVERSER => de::traverser::<Self>(inner_value),
 
                             type_tag => Err({
                                 let msg = format!("Unexpected type-tag `{type_tag}`");
@@ -235,11 +237,27 @@ pub(crate) fn edge<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue
     let edge_id = id::<D>(&val["id"])?;
 
     let in_v_id = id::<D>(&val["inV"])?;
-    let in_v_label = get_value!(&val["inVLabel"], Value::String)?.clone();
+    // This is intentional, there is no clear guidance on the discrepancies in 2.0.
+    // let in_v_label = get_value!(&val["inVLabel"], Value::String)?.clone();
+    let in_v_label = val
+        .get("inVLabel")
+        .map(|label| {
+            get_value!(&val["inVLabel"], Value::String)
+                .map(Clone::clone)
+                .unwrap()
+        })
+        .unwrap_or("Unavailable".into());
 
     let out_v_id = id::<D>(&val["outV"])?;
-    let out_v_label = get_value!(&val["outVLabel"], Value::String)?.clone();
-
+    // If we don't account for it we can't ser/de Property types.
+    let out_v_label = val
+        .get("outVLabel")
+        .map(|label| {
+            get_value!(&val["inVLabel"], Value::String)
+                .map(Clone::clone)
+                .unwrap()
+        })
+        .unwrap_or("Unavailable".into());
     Ok(Edge::new(
         edge_id,
         label,
@@ -371,18 +389,19 @@ pub(crate) fn property<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GV
         .ok_or(GremlinError::Json("Missing Property 'key' key".into()))??;
     let value = val
         .get("value")
-        .map(|v| get_value!(v, Value::Object).map(|v| Value::Object(v.clone())))
-        .ok_or(GremlinError::Json("Missing Property 'value' key".into()))??;
+        .ok_or(GremlinError::Json("Missing Property 'element' key".into()))?;
     let element = val
-        .get("value")
-        .map(|v| get_value!(v, Value::Object).map(|v| Value::Object(v.clone())))
-        .ok_or(GremlinError::Json("Missing Property 'element' key".into()))??;
+        .get("element")
+        .ok_or(GremlinError::Json("Missing Property 'element' key".into()))?;
 
-    Ok(GValue::Property(Property {
+    let value_obj = D::deserialize(&value)?;
+    let element_obj = D::deserialize(&element)?;
+    let property = Property {
         key: key,
-        value: Box::new(D::deserialize(&value)?),
-        element: Box::new(D::deserialize(&element)?),
-    }))
+        value: Box::new(value_obj),
+        element: Box::new(element_obj),
+    };
+    Ok(GValue::Property(property))
 }
 
 /// Traverser deserializer [docs](http://tinkerpop.apache.org/docs/3.4.1/dev/io/#_traverser_2)
