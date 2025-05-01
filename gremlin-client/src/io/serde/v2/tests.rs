@@ -80,6 +80,81 @@ mod structure {
 
     test_prelude!();
 
+    macro_rules! marko {
+        () => {
+            GValue::Vertex(Vertex {
+                id: GID::Int32(1),
+                label: "person".into(),
+                properties: {
+                    let mut tmp = HashMap::new();
+                    tmp.insert(
+                        "name".into(),
+                        vec![VertexProperty {
+                            id: GID::Int64(0),
+                            label: "name".into(),
+                            value: Box::new(GValue::String("marko".into())),
+                            vertex: Some(GID::Int32(1)),
+                            properties: Default::default(),
+                        }],
+                    );
+                    tmp.insert(
+                        "location".into(),
+                        vec![
+                            VertexProperty {
+                                id: GID::Int64(6),
+                                value: Box::new(GValue::String("san diego".into())),
+                                label: "location".into(),
+                                vertex: Some(GID::Int32(1)),
+                                properties: Some({
+                                    let mut tmp2 = HashMap::new();
+                                    tmp2.insert("startTime".into(), GValue::Int32(1997));
+                                    tmp2.insert("endTime".into(), GValue::Int32(2001));
+                                    tmp2
+                                }),
+                            },
+                            VertexProperty {
+                                id: GID::Int64(7),
+                                label: "location".into(),
+                                value: Box::new(GValue::String("santa cruz".into())),
+                                vertex: Some(GID::Int32(1)),
+                                properties: Some({
+                                    let mut tmp2 = HashMap::new();
+                                    tmp2.insert("startTime".into(), GValue::Int32(2001));
+                                    tmp2.insert("endTime".into(), GValue::Int32(2004));
+                                    tmp2
+                                }),
+                            },
+                            VertexProperty {
+                                id: GID::Int64(8),
+                                label: "location".into(),
+                                value: Box::new(GValue::String("brussels".into())),
+                                vertex: Some(GID::Int32(1)),
+                                properties: Some({
+                                    let mut tmp2 = HashMap::new();
+                                    tmp2.insert("startTime".into(), GValue::Int32(2004));
+                                    tmp2.insert("endTime".into(), GValue::Int32(2005));
+                                    tmp2
+                                }),
+                            },
+                            VertexProperty {
+                                id: GID::Int64(9),
+                                label: "location".into(),
+                                value: Box::new(GValue::String("santa fe".into())),
+                                vertex: Some(GID::Int32(1)),
+                                properties: Some({
+                                    let mut tmp2 = HashMap::new();
+                                    tmp2.insert("startTime".into(), GValue::Int32(2005));
+                                    tmp2
+                                }),
+                            },
+                        ],
+                    );
+                    tmp
+                },
+            })
+        };
+    }
+
     test!(
         edge,
         V2,
@@ -267,7 +342,58 @@ mod structure {
         V2,
         Test {
             serial: json!({ "@type" : "g:Tree", "@value" : [ { "key" : { "@type" : "g:Vertex", "@value" : { "id" : { "@type" : "g:Int32", "@value" : 1 }, "label" : "person", "properties" : { "name" : [ { "@type" : "g:VertexProperty", "@value" : { "id" : { "@type" : "g:Int64", "@value" : 0 }, "value" : "marko", "vertex" : { "@type" : "g:Int32", "@value" : 1 }, "label" : "name" } } ], "location" : [ { "@type" : "g:VertexProperty", "@value" : { "id" : { "@type" : "g:Int64", "@value" : 6 }, "value" : "san diego", "vertex" : { "@type" : "g:Int32", "@value" : 1 }, "label" : "location", "properties" : { "startTime" : { "@type" : "g:Int32", "@value" : 1997 }, "endTime" : { "@type" : "g:Int32", "@value" : 2001 } } } }, { "@type" : "g:VertexProperty", "@value" : { "id" : { "@type" : "g:Int64", "@value" : 7 }, "value" : "santa cruz", "vertex" : { "@type" : "g:Int32", "@value" : 1 }, "label" : "location", "properties" : { "startTime" : { "@type" : "g:Int32", "@value" : 2001 }, "endTime" : { "@type" : "g:Int32", "@value" : 2004 } } } }, { "@type" : "g:VertexProperty", "@value" : { "id" : { "@type" : "g:Int64", "@value" : 8 }, "value" : "brussels", "vertex" : { "@type" : "g:Int32", "@value" : 1 }, "label" : "location", "properties" : { "startTime" : { "@type" : "g:Int32", "@value" : 2004 }, "endTime" : { "@type" : "g:Int32", "@value" : 2005 } } } }, { "@type" : "g:VertexProperty", "@value" : { "id" : { "@type" : "g:Int64", "@value" : 9 }, "value" : "santa fe", "vertex" : { "@type" : "g:Int32", "@value" : 1 }, "label" : "location", "properties" : { "startTime" : { "@type" : "g:Int32", "@value" : 2005 } } } } ] } } }, "value" : { "@type" : "g:Tree", "@value" : [ { "key" : { "@type" : "g:Vertex", "@value" : { "id" : { "@type" : "g:Int32", "@value" : 10 }, "label" : "software", "properties" : { "name" : [ { "@type" : "g:VertexProperty", "@value" : { "id" : { "@type" : "g:Int64", "@value" : 4 }, "value" : "gremlin", "vertex" : { "@type" : "g:Int32", "@value" : 10 }, "label" : "name" } } ] } } }, "value" : { "@type" : "g:Tree", "@value" : [ { "key" : { "@type" : "g:Vertex", "@value" : { "id" : { "@type" : "g:Int32", "@value" : 11 }, "label" : "software", "properties" : { "name" : [ { "@type" : "g:VertexProperty", "@value" : { "id" : { "@type" : "g:Int64", "@value" : 5 }, "value" : "tinkergraph", "vertex" : { "@type" : "g:Int32", "@value" : 11 }, "label" : "name" } } ] } } }, "value" : { "@type" : "g:Tree", "@value" : [ ] } } ] } } ] } } ]}),
-            object: GValue::Null,
+            object: GValue::Tree(Tree {
+                branches: vec![Branch {
+                    key: Box::new(marko!()),
+                    value: Box::new(GValue::Tree(Tree {
+                        branches: vec![Branch {
+                            key: Box::new(GValue::Vertex(Vertex {
+                                id: GID::Int32(10),
+                                label: "software".into(),
+                                properties: {
+                                    let mut tmp = HashMap::new();
+                                    tmp.insert(
+                                        "name".into(),
+                                        vec![VertexProperty {
+                                            id: GID::Int64(4),
+                                            value: Box::new(GValue::String("gremlin".into())),
+                                            vertex: Some(GID::Int32(10)),
+                                            label: "name".into(),
+                                            properties: None,
+                                        }],
+                                    );
+                                    tmp
+                                },
+                            })),
+                            value: Box::new(GValue::Tree(Tree {
+                                branches: vec![Branch {
+                                    key: Box::new(GValue::Vertex(Vertex {
+                                        id: 11i32.into(),
+                                        label: "software".to_string(),
+                                        properties: {
+                                            let mut tmp = HashMap::new();
+                                            tmp.insert(
+                                                "name".into(),
+                                                vec![VertexProperty {
+                                                    id: 5i64.into(),
+                                                    value: Box::new(GValue::String(
+                                                        "tinkergraph".into(),
+                                                    )),
+                                                    vertex: Some(GID::Int32(11)),
+                                                    label: "name".to_string(),
+                                                    properties: Default::default(),
+                                                }],
+                                            );
+                                            tmp
+                                        },
+                                    })),
+                                    value: Box::new(GValue::Tree(Tree { branches: vec![] }))
+                                }],
+                            }))
+                        }]
+                    })),
+                },],
+            }),
         }
     );
     test!(
@@ -275,22 +401,7 @@ mod structure {
         V2,
         Test {
             serial: json!({ "@type" : "g:Vertex", "@value" : { "id" : { "@type" : "g:Int32", "@value" : 1 }, "label" : "person", "properties" : { "name" : [ { "@type" : "g:VertexProperty", "@value" : { "id" : { "@type" : "g:Int64", "@value" : 0 }, "value" : "marko", "vertex" : { "@type" : "g:Int32", "@value" : 1 }, "label" : "name" } } ], "location" : [ { "@type" : "g:VertexProperty", "@value" : { "id" : { "@type" : "g:Int64", "@value" : 6 }, "value" : "san diego", "vertex" : { "@type" : "g:Int32", "@value" : 1 }, "label" : "location", "properties" : { "startTime" : { "@type" : "g:Int32", "@value" : 1997 }, "endTime" : { "@type" : "g:Int32", "@value" : 2001 } } } }, { "@type" : "g:VertexProperty", "@value" : { "id" : { "@type" : "g:Int64", "@value" : 7 }, "value" : "santa cruz", "vertex" : { "@type" : "g:Int32", "@value" : 1 }, "label" : "location", "properties" : { "startTime" : { "@type" : "g:Int32", "@value" : 2001 }, "endTime" : { "@type" : "g:Int32", "@value" : 2004 } } } }, { "@type" : "g:VertexProperty", "@value" : { "id" : { "@type" : "g:Int64", "@value" : 8 }, "value" : "brussels", "vertex" : { "@type" : "g:Int32", "@value" : 1 }, "label" : "location", "properties" : { "startTime" : { "@type" : "g:Int32", "@value" : 2004 }, "endTime" : { "@type" : "g:Int32", "@value" : 2005 } } } }, { "@type" : "g:VertexProperty", "@value" : { "id" : { "@type" : "g:Int64", "@value" : 9 }, "value" : "santa fe", "vertex" : { "@type" : "g:Int32", "@value" : 1 }, "label" : "location", "properties" : { "startTime" : { "@type" : "g:Int32", "@value" : 2005 } } } } ] } }}),
-            object: vertex!({
-                id => 1,
-                label => "person",
-                properties => {
-                    "name" => [
-                        { id => 0 as i64 , value => "marko"}
-                    ],
-                    "location" => [
-                        { id => 6 as i64, value => "san diego"},
-                        { id => 7  as i64 , value => "santa cruz"},
-                        { id => 8  as i64, value => "brussels"},
-                        { id => 9  as i64, value => "santa fe"}
-                    ]
-                }
-            })
-            .into(),
+            object: marko!(),
         }
     );
     test!(
@@ -298,7 +409,13 @@ mod structure {
         V2,
         Test {
             serial: json!({ "@type" : "g:VertexProperty", "@value" : { "id" : { "@type" : "g:Int64", "@value" : 0 }, "value" : "marko", "vertex" : { "@type" : "g:Int32", "@value" : 1 }, "label" : "name" }}),
-            object: GValue::Null,
+            object: GValue::VertexProperty(VertexProperty {
+                id: GID::Int64(0),
+                value: Box::new(GValue::String("marko".to_string())),
+                vertex: Some(GID::Int32(1)),
+                label: "name".into(),
+                properties: None,
+            }),
         }
     );
 }

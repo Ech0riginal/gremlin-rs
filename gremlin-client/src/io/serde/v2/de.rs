@@ -1,14 +1,11 @@
 use crate::io::serde::v2::types::*;
-use crate::io::serde::v2::{de, types};
 use crate::io::{GraphSONDeserializer, V2};
-use crate::prelude::{
-    Edge, GKey, GValue, GremlinError, GremlinResult, IntermediateRepr, Map, Metric, Path, Property,
-    Token, TraversalExplanation, TraversalMetrics, Traverser, Vertex, VertexProperty, GID,
-};
-use crate::structure::List;
+use crate::prelude::{GremlinError, GremlinResult};
+use crate::structure::*;
 use chrono::{TimeZone, Utc};
 use serde_json::Value;
 use std::collections::HashMap;
+use std::io::Read;
 
 impl GraphSONDeserializer for V2 {
     fn deserialize(value: &Value) -> GremlinResult<GValue> {
@@ -40,7 +37,7 @@ impl GraphSONDeserializer for V2 {
                             PROPERTY => property::<Self>(inner_value),
                             STAR_GRAPH => todo!("support"),
                             TINKER_GRAPH => todo!("support"),
-                            TREE => todo!("support"),
+                            TREE => tree::<Self>(inner_value),
                             VERTEX => vertex::<Self>(inner_value),
                             VERTEX_PROPERTY => vertex_property::<Self>(inner_value),
                             BARRIER => todo!("support"),
@@ -214,6 +211,36 @@ pub(crate) fn direction(val: &Value) -> GremlinResult<GValue> {
     }
 }
 
+fn tree<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
+    let array = get_value!(val, Value::Array)?;
+    let branches = array
+        .into_iter()
+        .map(tree_branch::<D>)
+        .collect::<GremlinResult<Vec<_>>>()?;
+    Ok(GValue::Tree(Tree { branches }))
+}
+
+fn tree_branch<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<Branch> {
+    let obj = get_value!(val, Value::Object)?;
+
+    let key = if let Some(key) = obj.get("key") {
+        D::deserialize(key)?
+    } else {
+        return Err(GremlinError::Json("TreeNode missing 'key' key".into()));
+    };
+
+    let value = if let Some(value) = obj.get("value") {
+        D::deserialize(value)?
+    } else {
+        return Err(GremlinError::Json("TreeNode missing 'value' key".into()));
+    };
+
+    Ok(Branch {
+        key: Box::new(key),
+        value: Box::new(value),
+    })
+}
+
 /// Vertex deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_vertex_3)
 pub(crate) fn vertex<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
     let label = val
@@ -361,14 +388,32 @@ pub(crate) fn explain<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GVa
 
 /// Vertex Property deserializer [docs](http://tinkerpop.apache.org/docs/current/dev/io/#_vertexproperty_3)
 pub(crate) fn vertex_property<D: GraphSONDeserializer>(val: &Value) -> GremlinResult<GValue> {
-    let label = val
-        .get("label")
-        .map(|f| get_value!(f, Value::String).map(Clone::clone))
-        .unwrap_or_else(|| Ok(String::from("vertex_property")))?;
+    let mut property = VertexProperty {
+        id: id::<D>(&val["id"])?,
+        value: Box::new(D::deserialize(&val["value"])?),
+        vertex: None,
+        label: val
+            .get("label")
+            .map(|f| get_value!(f, Value::String).map(Clone::clone))
+            .unwrap_or_else(|| Err(GremlinError::Json("Missing VertexProperty label".into())))?,
+        properties: None,
+    };
 
-    let id = id::<D>(&val["id"])?;
-    let v = D::deserialize(&val["value"])?;
-    let property = VertexProperty::new(id, label, v);
+    if let Some(vertex_id) = val.get("vertex") {
+        property.vertex = Some(id::<D>(vertex_id)?);
+    }
+
+    property.properties = val
+        .get("properties")
+        .map(|p| get_value!(p, Value::Object).unwrap())
+        .map(|obj| {
+            obj.into_iter()
+                .map(|(label, property_value)| (label, D::deserialize(property_value)))
+                .filter(|(_, v)| v.is_ok())
+                .map(|(k, v)| (k.clone(), v.unwrap()))
+                .collect::<HashMap<String, GValue>>()
+        });
+
     Ok(property.into())
 }
 
